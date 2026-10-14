@@ -10,10 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.api.schemas import (
     AttentionBadge,
+    FeedOut,
     JobOut,
     PriceBadge,
     ProductDetailOut,
     RetailBadge,
+    ReviewIn,
+    ReviewOut,
     RunRequest,
     ScanInfo,
     SourceStatus,
@@ -27,6 +30,7 @@ from app.db.models import Company, Product, Scan, SignalState, SourceRun
 from app.db.session import session_factory
 from app.pipeline import jobs
 from app.pipeline.detail import NotFound, product_detail
+from app.pipeline.feed import FeedError, build_feed, record_review, review_history
 from app.sources.demo.state import stored_anchor
 
 router = APIRouter(prefix="/api")
@@ -155,6 +159,26 @@ def product(product_id: int, scan_id: int | None = None, days: int = Query(180, 
         return ProductDetailOut.model_validate(product_detail(session, load_settings(), product_id, scan_id, days))
     except NotFound as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/feed", response_model=FeedOut)
+def feed(scan_id: int | None = None, session: Session = Depends(get_session)) -> FeedOut:
+    return FeedOut.model_validate(build_feed(session, load_settings(), scan_id))
+
+
+@router.post("/alerts/{alert_id}/review", response_model=ReviewOut)
+def review(alert_id: int, body: ReviewIn, session: Session = Depends(get_session)) -> ReviewOut:
+    """The only write the review screens make: append a row to alert_reviews. Alerts are never changed."""
+    try:
+        r = record_review(session, alert_id, body.decision, body.note)
+    except FeedError as e:
+        raise HTTPException(status_code=404 if "not found" in str(e) else 422, detail=str(e))
+    return ReviewOut.model_validate(r, from_attributes=True)
+
+
+@router.get("/alerts/{alert_id}/reviews", response_model=list[ReviewOut])
+def reviews(alert_id: int, session: Session = Depends(get_session)) -> list[ReviewOut]:
+    return [ReviewOut.model_validate(r, from_attributes=True) for r in review_history(session, alert_id)]
 
 
 def _job(fn, *a, **kw) -> JobOut:

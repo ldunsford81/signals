@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ScanInfo(BaseModel):
@@ -221,3 +221,99 @@ class ProductDetailOut(BaseModel):
     announcements: list[AnnouncementOut]
     history: list[HistoryRow]
     alerts: list[AlertRow]
+
+
+# ---- review feed --------------------------------------------------------------
+class FieldChange(BaseModel):
+    field: str
+    label: str
+    from_: str | None = Field(None, alias="from")
+    to: str | None
+
+    model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
+
+
+class FeedCard(BaseModel):
+    product_id: int
+    product: str
+    company_id: int
+    company: str
+    ticker: str
+    is_demo: bool
+    stage: str
+    summary: str
+    reason: str | None
+    attention: str
+    attention_score: float | None
+    single_source: bool
+    price: str
+    relative_return: float | None
+    volume_ratio: float | None
+    benchmark: str | None
+    retail: str
+    signal_start_date: date | None
+    days_to_earnings: int | None
+    earnings_projected: bool
+    earnings_status: str
+    days_left_in_quarter: int | None
+    quarter_closed: bool
+    is_new: bool
+    changes: list[FieldChange]
+    alert_id: int | None
+    alert_as_of: date | None
+    decision: str
+    note: str | None
+    reviewed_at: datetime | None
+
+
+class FeedGroup(BaseModel):
+    company_id: int
+    company: str
+    ticker: str
+    is_demo: bool
+    cards: list[FeedCard]
+
+
+class UnknownInput(BaseModel):
+    family: str
+    reason: str
+
+
+class HealthItem(BaseModel):
+    product_id: int
+    product: str
+    company: str
+    ticker: str
+    attention: str
+    signal_start_date: date | None
+    unknown_inputs: list[UnknownInput]
+    reason: str | None
+
+
+class FeedScan(BaseModel):
+    id: int
+    as_of: date
+    trigger: str
+    config_hash: str
+    finished_at: datetime | None
+
+
+class FeedOut(BaseModel):
+    scan: FeedScan | None
+    prior_as_of: date | None
+    groups: list[FeedGroup]
+    health: list[HealthItem]
+    counts: dict[str, int]
+
+
+class ReviewIn(BaseModel):
+    decision: Literal["unreviewed", "acted", "passed", "exited"]
+    note: str | None = Field(None, max_length=2000)
+
+
+class ReviewOut(BaseModel):
+    id: int
+    alert_id: int
+    decision: str
+    note: str | None
+    reviewed_at: datetime

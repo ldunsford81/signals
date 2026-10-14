@@ -62,3 +62,27 @@ def evaluate(x: StageInputs, settings: Settings) -> tuple[str, int | None]:
         if matches(rule, x, settings):
             return rule.name, i
     return NO_STAGE, None
+
+
+def describe(rule: StageRule, settings: Settings) -> str:
+    """Plain-English reason for a stage, built from the rule that fired."""
+    w = rule.when
+    parts: list[str] = []
+    if w.attention_elevated_within_days is not None:
+        parts.append(f"attention elevated within the last {w.attention_elevated_within_days} days")
+    if w.any_required_unknown:
+        parts.append(f"any of {' / '.join(w.any_required_unknown)} unknown")
+    for name in ("attention", "price", "retail"):
+        vals = getattr(w, name)
+        if vals:
+            parts.append(f"{name} {' or '.join(v.replace('_', ' ') for v in vals)}")
+    if w.earnings == "inside_window":
+        lo, hi = settings.earnings.window_days
+        parts.append(f"earnings {lo}–{hi} days out")
+    elif w.earnings:
+        parts.append(f"earnings {w.earnings.replace('_', ' ')}")
+    if w.quarter_open is not None:
+        parts.append("reporting quarter open" if w.quarter_open else "reporting quarter closed")
+    if rule.name == "entry_review" and settings.earnings.require_open_quarter_for_entry and w.quarter_open is None:
+        parts.append("reporting quarter open")
+    return ", ".join(parts) if parts else "always"

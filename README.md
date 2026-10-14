@@ -7,10 +7,10 @@ claim that the signal has alpha.
 
 Everything runs on seeded, synthetic demo data with **zero API keys and zero paid services**.
 
-> **Build status:** steps 1–8 of the build prompt are done (skeleton, config, calendar, models and
+> **Build status:** steps 1–9 of the build prompt are done (skeleton, config, calendar, models and
 > migration, six demo adapters, ingest with health recording, signal calculators, stage engine,
-> scan with alerts and change detection, CLI, API, the Watchlist screen and the product Detail
-> screen). Review feed, replay/evaluate, Alerts and Admin screens, and the live stubs come in steps 9–12.
+> scan with alerts and change detection, CLI, API, and the Watchlist, product Detail and Review feed
+> screens). Replay/evaluate, the Alerts and Admin screens, and the live stubs come in steps 10–12.
 
 ## Requirements
 
@@ -46,7 +46,9 @@ npm install
 npm run dev          # http://127.0.0.1:5173
 ```
 
-Click any product name on the watchlist to open its Detail page.
+Click any product name on the watchlist to open its Detail page. **Review feed** (top nav) lists
+today's entry, early-recognition and exit cases with the reason each one fired, what changed since
+the last scan, and buttons to record your decision (acted / passed / exited + a note).
 
 Next time, you only need `cd backend && source .venv/bin/activate && ctm serve` in one terminal and
 `cd frontend && npm run dev` in another.
@@ -175,7 +177,7 @@ backend/app/
 frontend/src/
   api/         typed client (types generated from OpenAPI)
   components/  badges, layout, TimeChart (shared time axis + crosshair)
-  pages/       Watchlist, Detail (Feed, Alerts, Admin to follow)
+  pages/       Watchlist, Detail, Feed (Alerts, Admin to follow)
 config/settings.yaml
 DECISIONS.md
 ```

@@ -222,6 +222,145 @@
         }
       }
     },
+    "/api/feed": {
+      "get": {
+        "summary": "Feed",
+        "operationId": "feed_api_feed_get",
+        "parameters": [
+          {
+            "name": "scan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scan Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/{alert_id}/review": {
+      "post": {
+        "summary": "Review",
+        "description": "The only write the review screens make: append a row to alert_reviews. Alerts are never changed.",
+        "operationId": "review_api_alerts__alert_id__review_post",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Alert Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/{alert_id}/reviews": {
+      "get": {
+        "summary": "Reviews",
+        "operationId": "reviews_api_alerts__alert_id__reviews_get",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Alert Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewOut"
+                  },
+                  "title": "Response Reviews Api Alerts  Alert Id  Reviews Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ingest": {
       "post": {
         "summary": "Ingest",
@@ -876,6 +1015,429 @@
         ],
         "title": "DetailState"
       },
+      "FeedCard": {
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "company_id": {
+            "type": "integer",
+            "title": "Company Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "is_demo": {
+            "type": "boolean",
+            "title": "Is Demo"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "attention": {
+            "type": "string",
+            "title": "Attention"
+          },
+          "attention_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attention Score"
+          },
+          "single_source": {
+            "type": "boolean",
+            "title": "Single Source"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "relative_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Return"
+          },
+          "volume_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Ratio"
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark"
+          },
+          "retail": {
+            "type": "string",
+            "title": "Retail"
+          },
+          "signal_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signal Start Date"
+          },
+          "days_to_earnings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Earnings"
+          },
+          "earnings_projected": {
+            "type": "boolean",
+            "title": "Earnings Projected"
+          },
+          "earnings_status": {
+            "type": "string",
+            "title": "Earnings Status"
+          },
+          "days_left_in_quarter": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Left In Quarter"
+          },
+          "quarter_closed": {
+            "type": "boolean",
+            "title": "Quarter Closed"
+          },
+          "is_new": {
+            "type": "boolean",
+            "title": "Is New"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "type": "array",
+            "title": "Changes"
+          },
+          "alert_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Id"
+          },
+          "alert_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert As Of"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "product",
+          "company_id",
+          "company",
+          "ticker",
+          "is_demo",
+          "stage",
+          "summary",
+          "reason",
+          "attention",
+          "attention_score",
+          "single_source",
+          "price",
+          "relative_return",
+          "volume_ratio",
+          "benchmark",
+          "retail",
+          "signal_start_date",
+          "days_to_earnings",
+          "earnings_projected",
+          "earnings_status",
+          "days_left_in_quarter",
+          "quarter_closed",
+          "is_new",
+          "changes",
+          "alert_id",
+          "alert_as_of",
+          "decision",
+          "note",
+          "reviewed_at"
+        ],
+        "title": "FeedCard"
+      },
+      "FeedGroup": {
+        "properties": {
+          "company_id": {
+            "type": "integer",
+            "title": "Company Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "is_demo": {
+            "type": "boolean",
+            "title": "Is Demo"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/FeedCard"
+            },
+            "type": "array",
+            "title": "Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id",
+          "company",
+          "ticker",
+          "is_demo",
+          "cards"
+        ],
+        "title": "FeedGroup"
+      },
+      "FeedOut": {
+        "properties": {
+          "scan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedScan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prior_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior As Of"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/FeedGroup"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "health": {
+            "items": {
+              "$ref": "#/components/schemas/HealthItem"
+            },
+            "type": "array",
+            "title": "Health"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scan",
+          "prior_as_of",
+          "groups",
+          "health",
+          "counts"
+        ],
+        "title": "FeedOut"
+      },
+      "FeedScan": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "as_of",
+          "trigger",
+          "config_hash",
+          "finished_at"
+        ],
+        "title": "FeedScan"
+      },
+      "FieldChange": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "label",
+          "to"
+        ],
+        "title": "FieldChange"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -888,6 +1450,72 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HealthItem": {
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "attention": {
+            "type": "string",
+            "title": "Attention"
+          },
+          "signal_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signal Start Date"
+          },
+          "unknown_inputs": {
+            "items": {
+              "$ref": "#/components/schemas/UnknownInput"
+            },
+            "type": "array",
+            "title": "Unknown Inputs"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "product",
+          "company",
+          "ticker",
+          "attention",
+          "signal_start_date",
+          "unknown_inputs",
+          "reason"
+        ],
+        "title": "HealthItem"
       },
       "HistoryRow": {
         "properties": {
@@ -1294,6 +1922,78 @@
         ],
         "title": "RetailBadge"
       },
+      "ReviewIn": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "unreviewed",
+              "acted",
+              "passed",
+              "exited"
+            ],
+            "title": "Decision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "ReviewIn"
+      },
+      "ReviewOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "alert_id": {
+            "type": "integer",
+            "title": "Alert Id"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reviewed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "alert_id",
+          "decision",
+          "note",
+          "reviewed_at"
+        ],
+        "title": "ReviewOut"
+      },
       "RunRequest": {
         "properties": {
           "as_of": {
@@ -1605,6 +2305,24 @@
           "sources"
         ],
         "title": "StatusOut"
+      },
+      "UnknownInput": {
+        "properties": {
+          "family": {
+            "type": "string",
+            "title": "Family"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "family",
+          "reason"
+        ],
+        "title": "UnknownInput"
       },
       "ValidationError": {
         "properties": {

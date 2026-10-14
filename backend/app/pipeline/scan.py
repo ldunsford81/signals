@@ -62,14 +62,22 @@ def fmt_pct(x: float | None) -> str:
     return "n/a" if x is None else f"{x * 100:+.1f}%"
 
 
+def format_summary(product: str, attention: str, n_sources: int, signal_start: date | None, price: str,
+                   relative_return: float | None, benchmark: str | None, retail: str, days_to_earnings: int | None,
+                   earnings_status: str, as_of: date) -> str:
+    """The one-line summary: "{product}: attention {status} ({n} sources, {days} days), price ..."."""
+    days = (as_of - signal_start).days + 1 if signal_start else 0
+    dte = days_to_earnings if earnings_status != "unknown" else "unknown"
+    return (f"{product}: attention {attention} ({n_sources} source{'' if n_sources == 1 else 's'}, {days} days), "
+            f"price {price} ({fmt_pct(relative_return)} vs {benchmark or 'benchmark'}), "
+            f"retail {retail}, {dte} days to earnings.")
+
+
 def summary_line(product: str, att: AttentionResult, price: PriceResult, retail: RetailResult,
                  earn: EarningsResult, as_of: date) -> str:
-    days = (as_of - att.signal_start_date).days + 1 if att.signal_start_date else 0
-    bench = price.components.get("benchmark", "benchmark")
-    dte = earn.days_to_earnings if earn.status != "unknown" else "unknown"
-    return (f"{product}: attention {att.status} ({att.n_accelerating} sources, {days} days), "
-            f"price {price.status} ({fmt_pct(price.components.get('relative_return'))} vs {bench}), "
-            f"retail {retail.status}, {dte} days to earnings.")
+    return format_summary(product, att.status, att.n_accelerating, att.signal_start_date, price.status,
+                          price.components.get("relative_return"), price.components.get("benchmark"),
+                          retail.status, earn.days_to_earnings, earn.status, as_of)
 
 
 def _announcements(session: Session, as_of: date, days: int) -> dict[tuple[int, int | None], list[dict]]:

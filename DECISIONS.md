@@ -156,3 +156,22 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   under the charts.
 - **Window presets** 90 / 180 / 365 days (API accepts 30–400). The page keeps the previous render at
   reduced opacity while a new window loads.
+
+## Review feed (step 9)
+
+- **What appears.** Every product in a reportable stage at the latest non-replay scan, from
+  `signal_states`, so products that stay in a stage keep showing even though no new alert is
+  written. Grouped by company; companies and cards follow the watchlist order (stage priority, then
+  attention score), so each company's strongest product is first.
+- **The reason line** is generated from the stage rule that fired, using the config version that
+  produced the scan (looked up in `config_versions`), e.g. "attention elevated, price flat, retail
+  quiet, earnings 42–98 days out".
+- **"Since last scan"** compares stage, attention, price and retail with the product's state at the
+  prior scan in the same lineage. A card is tagged `new` when the product entered the stage at this
+  scan; otherwise it shows the date of the alert that opened the stage.
+- **Decisions attach to that alert:** the latest alert for the product in its current stage. Saving
+  appends a row to `alert_reviews` (decision + note); the newest row is the current decision and
+  older rows stay as history (`GET /api/alerts/{id}/reviews`). Alerts are never modified. Clicking a
+  selected decision again clears it back to `unreviewed`.
+- **Health panel** lists `data_gap` products with each unknown input and its reason. No alerts.
+- **Summary wording**: "1 source" is singular; otherwise the template is as specified.

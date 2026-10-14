@@ -44,3 +44,13 @@ export type SourceSeries = S["SourceSeries"];
 export const productApi = {
   detail: (id: number, days: number) => request<ProductDetail>("GET", `/api/products/${id}`, { days }),
 };
+
+export type FeedOut = S["FeedOut"];
+export type FeedCard = S["FeedCard"];
+export type ReviewIn = S["ReviewIn"];
+export type ReviewOut = S["ReviewOut"];
+
+export const feedApi = {
+  feed: () => request<FeedOut>("GET", "/api/feed"),
+  review: (alertId: number, body: ReviewIn) => request<ReviewOut>("POST", `/api/alerts/${alertId}/review`, undefined, body),
+};

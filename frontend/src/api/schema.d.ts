@@ -55,6 +55,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feed */
+        get: operations["feed_api_feed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/{alert_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review
+         * @description The only write the review screens make: append a row to alert_reviews. Alerts are never changed.
+         */
+        post: operations["review_api_alerts__alert_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/{alert_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reviews */
+        get: operations["reviews_api_alerts__alert_id__reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ingest": {
         parameters: {
             query?: never;
@@ -289,10 +343,146 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** FeedCard */
+        FeedCard: {
+            /** Product Id */
+            product_id: number;
+            /** Product */
+            product: string;
+            /** Company Id */
+            company_id: number;
+            /** Company */
+            company: string;
+            /** Ticker */
+            ticker: string;
+            /** Is Demo */
+            is_demo: boolean;
+            /** Stage */
+            stage: string;
+            /** Summary */
+            summary: string;
+            /** Reason */
+            reason: string | null;
+            /** Attention */
+            attention: string;
+            /** Attention Score */
+            attention_score: number | null;
+            /** Single Source */
+            single_source: boolean;
+            /** Price */
+            price: string;
+            /** Relative Return */
+            relative_return: number | null;
+            /** Volume Ratio */
+            volume_ratio: number | null;
+            /** Benchmark */
+            benchmark: string | null;
+            /** Retail */
+            retail: string;
+            /** Signal Start Date */
+            signal_start_date: string | null;
+            /** Days To Earnings */
+            days_to_earnings: number | null;
+            /** Earnings Projected */
+            earnings_projected: boolean;
+            /** Earnings Status */
+            earnings_status: string;
+            /** Days Left In Quarter */
+            days_left_in_quarter: number | null;
+            /** Quarter Closed */
+            quarter_closed: boolean;
+            /** Is New */
+            is_new: boolean;
+            /** Changes */
+            changes: components["schemas"]["FieldChange"][];
+            /** Alert Id */
+            alert_id: number | null;
+            /** Alert As Of */
+            alert_as_of: string | null;
+            /** Decision */
+            decision: string;
+            /** Note */
+            note: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+        };
+        /** FeedGroup */
+        FeedGroup: {
+            /** Company Id */
+            company_id: number;
+            /** Company */
+            company: string;
+            /** Ticker */
+            ticker: string;
+            /** Is Demo */
+            is_demo: boolean;
+            /** Cards */
+            cards: components["schemas"]["FeedCard"][];
+        };
+        /** FeedOut */
+        FeedOut: {
+            scan: components["schemas"]["FeedScan"] | null;
+            /** Prior As Of */
+            prior_as_of: string | null;
+            /** Groups */
+            groups: components["schemas"]["FeedGroup"][];
+            /** Health */
+            health: components["schemas"]["HealthItem"][];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+        };
+        /** FeedScan */
+        FeedScan: {
+            /** Id */
+            id: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Trigger */
+            trigger: string;
+            /** Config Hash */
+            config_hash: string;
+            /** Finished At */
+            finished_at: string | null;
+        };
+        /** FieldChange */
+        FieldChange: {
+            /** Field */
+            field: string;
+            /** Label */
+            label: string;
+            /** From */
+            from?: string | null;
+            /** To */
+            to: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HealthItem */
+        HealthItem: {
+            /** Product Id */
+            product_id: number;
+            /** Product */
+            product: string;
+            /** Company */
+            company: string;
+            /** Ticker */
+            ticker: string;
+            /** Attention */
+            attention: string;
+            /** Signal Start Date */
+            signal_start_date: string | null;
+            /** Unknown Inputs */
+            unknown_inputs: components["schemas"]["UnknownInput"][];
+            /** Reason */
+            reason: string | null;
         };
         /** HistoryRow */
         HistoryRow: {
@@ -403,6 +593,32 @@ export interface components {
             /** Set By */
             set_by?: string | null;
         };
+        /** ReviewIn */
+        ReviewIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "unreviewed" | "acted" | "passed" | "exited";
+            /** Note */
+            note?: string | null;
+        };
+        /** ReviewOut */
+        ReviewOut: {
+            /** Id */
+            id: number;
+            /** Alert Id */
+            alert_id: number;
+            /** Decision */
+            decision: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Reviewed At
+             * Format: date-time
+             */
+            reviewed_at: string;
+        };
         /** RunRequest */
         RunRequest: {
             /** As Of */
@@ -486,6 +702,13 @@ export interface components {
             warnings: string[];
             /** Sources */
             sources: components["schemas"]["SourceStatus"][];
+        };
+        /** UnknownInput */
+        UnknownInput: {
+            /** Family */
+            family: string;
+            /** Reason */
+            reason: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -639,6 +862,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_api_feed_get: {
+        parameters: {
+            query?: {
+                scan_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_api_alerts__alert_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reviews_api_alerts__alert_id__reviews_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewOut"][];
                 };
             };
             /** @description Validation Error */

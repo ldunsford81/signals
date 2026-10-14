@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Detail } from "./pages/Detail";
+import { Feed } from "./pages/Feed";
 import { Watchlist } from "./pages/Watchlist";
 import "./styles.css";
 
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route element={<Layout />}>
             <Route path="/" element={<Watchlist />} />
             <Route path="/products/:id" element={<Detail />} />
+            <Route path="/feed" element={<Feed />} />
           </Route>
         </Routes>
       </BrowserRouter>
