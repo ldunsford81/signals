@@ -15,7 +15,7 @@ export interface WatchlistQuery {
   earnings_window: boolean;
 }
 
-async function request<T>(method: "GET" | "POST", path: string, params?: Record<string, unknown>, body?: unknown): Promise<T> {
+async function request<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: string, params?: Record<string, unknown>, body?: unknown): Promise<T> {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params ?? {})) {
     if (v !== undefined && v !== null && v !== "") qs.append(k, String(v));
@@ -26,7 +26,17 @@ async function request<T>(method: "GET" | "POST", path: string, params?: Record<
     headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${method} ${path} failed: ${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    const text = await res.text();
+    let detail = text;
+    try {
+      const j = JSON.parse(text);
+      detail = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail ?? j);
+    } catch {
+      /* not JSON */
+    }
+    throw new Error(detail || `${method} ${path} failed (${res.status})`);
+  }
   return (await res.json()) as T;
 }
 
@@ -75,4 +85,30 @@ export const evalApi = {
   alerts: (q: AlertQuery) => request<AlertLogOut>("GET", "/api/alerts", { ...q }),
   alert: (id: number) => request<AlertDetailOut>("GET", `/api/alerts/${id}`),
   evaluate: () => request<JobOut>("POST", "/api/evaluate", undefined, {}),
+};
+
+export type CompanyIn = S["CompanyIn"];
+export type CompanyOut = S["CompanyOut"];
+export type ProductIn = S["ProductIn"];
+export type ProductOut = S["ProductOut"];
+export type AnnouncementIn = S["AnnouncementIn"];
+export type AnnouncementAdminOut = S["AnnouncementAdminOut"];
+export type ImportOut = S["ImportOut"];
+
+export const adminApi = {
+  companies: () => request<CompanyOut[]>("GET", "/api/admin/companies"),
+  createCompany: (b: CompanyIn) => request<CompanyOut>("POST", "/api/admin/companies", undefined, b),
+  updateCompany: (id: number, b: CompanyIn) => request<CompanyOut>("PUT", `/api/admin/companies/${id}`, undefined, b),
+  products: () => request<ProductOut[]>("GET", "/api/admin/products"),
+  createProduct: (b: ProductIn) => request<ProductOut>("POST", "/api/admin/products", undefined, b),
+  updateProduct: (id: number, b: ProductIn) => request<ProductOut>("PUT", `/api/admin/products/${id}`, undefined, b),
+  announcements: () => request<AnnouncementAdminOut[]>("GET", "/api/admin/announcements"),
+  createAnnouncement: (b: AnnouncementIn) => request<AnnouncementAdminOut>("POST", "/api/admin/announcements", undefined, b),
+  updateAnnouncement: (id: number, b: AnnouncementIn) =>
+    request<AnnouncementAdminOut>("PUT", `/api/admin/announcements/${id}`, undefined, b),
+  deleteAnnouncement: (id: number) => request<{ ok: boolean }>("DELETE", `/api/admin/announcements/${id}`),
+  templates: () => request<S["CsvTemplates"]>("GET", "/api/admin/import/templates"),
+  importCsv: (kind: "companies" | "products", csv: string, dry_run: boolean) =>
+    request<ImportOut>("POST", `/api/admin/import/${kind}`, undefined, { csv, dry_run }),
+  run: (job: "ingest" | "scan" | "daily" | "replay" | "evaluate") => request<JobOut>("POST", `/api/${job}`, undefined, {}),
 };

@@ -88,7 +88,10 @@ def combined(bumps, off: np.ndarray, source: str, unique: bool = False) -> np.nd
 
 
 def generic_product(ticker: str, name: str) -> ProductSpec:
-    return ProductSpec(name=name, keywords=(name.lower(),))
+    """A product added by hand (Admin or CSV) in demo mode: rising attention from 12 days before the
+    anchor, so it visibly flows through ingest, scan and alerts. Clearly synthetic, like all demo data."""
+    return ProductSpec(name=name, keywords=(name.lower(),), bumps=(Bump(-12, "step", 2.6),),
+                       scenario="added by hand: synthetic rising attention")
 
 
 def generic_company(ticker: str) -> CompanySpec:

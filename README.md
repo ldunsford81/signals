@@ -7,11 +7,9 @@ claim that the signal has alpha.
 
 Everything runs on seeded, synthetic demo data with **zero API keys and zero paid services**.
 
-> **Build status:** steps 1–10 of the build prompt are done (skeleton, config, calendar, models and
-> migration, six demo adapters, ingest with health recording, signal calculators, stage engine,
-> scan with alerts and change detection, replay and evaluation, CLI, API, and the Watchlist, product
-> Detail, Review feed and Alerts & evaluation screens). The Admin screen and the live stubs come in
-> steps 11–12.
+> **Build status:** steps 1–11 of the build prompt are done: everything except the live-source stubs,
+> the earnings CSV mode and the final README/DECISIONS pass (step 12). All five screens work:
+> Watchlist, product Detail, Review feed, Alerts & evaluation, and Admin.
 
 ## Requirements
 
@@ -57,7 +55,9 @@ today's entry, early-recognition and exit cases with the reason each one fired, 
 the last scan, and buttons to record your decision (acted / passed / exited + a note).
 **Alerts & evaluation** shows the rules-performance table (hit rate, median and mean excess return
 per horizon, by stage, config version and trigger) and the immutable alert log with each alert's
-outcomes and full input snapshot.
+outcomes and full input snapshot. **Admin** is where you add and edit companies, products and
+announcements (or import them from CSV), fix earnings dates, see each source's last run, and run
+ingest / scan / daily / replay / evaluate with a button.
 
 Next time, you only need `cd backend && source .venv/bin/activate && ctm serve` in one terminal and
 `cd frontend && npm run dev` in another.
@@ -189,7 +189,7 @@ backend/app/
 frontend/src/
   api/         typed client (types generated from OpenAPI)
   components/  badges, layout, TimeChart (shared time axis + crosshair)
-  pages/       Watchlist, Detail, Feed, Alerts (Admin to follow)
+  pages/       Watchlist, Detail, Feed, Alerts, Admin
 config/settings.yaml
 DECISIONS.md
 ```

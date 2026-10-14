@@ -198,10 +198,28 @@ def run_source(session: Session, settings: Settings, name: str, as_of: date, ful
     if not entities:
         return _record(session, name, cfg.mode, started, "skipped", 0, "no entities in scope", prev_good)
     start, end = fetch_window(session, settings, adapter, as_of, full_history)
+    # Entities this source has never stored (e.g. a product just added in Admin) get the full history.
+    known = set(session.scalars(select(Observation.entity_key).where(Observation.source == adapter.name).distinct()))
+    fresh = [e for e in entities if e.key not in known]
+    backfill_start = end - timedelta(days=settings.demo.history_days)
+    batches = [(entities, start, end)]
+    if fresh and start > backfill_start and not adapter.rescales_history:
+        batches = [([e for e in entities if e.key in known], start, end), (fresh, backfill_start, end)]
+
+    def fetch_all() -> FetchResult:
+        merged = FetchResult()
+        for ents, s0, s1 in batches:
+            if not ents:
+                continue
+            r = adapter.fetch(ents, s0, s1)
+            merged.observations += r.observations
+            merged.warnings += r.warnings
+            merged.snapshot = merged.snapshot or r.snapshot
+        return merged
 
     pool = ThreadPoolExecutor(max_workers=1)
     try:
-        result = pool.submit(adapter.fetch, entities, start, end).result(timeout=settings.ingest.timeout_seconds)
+        result = pool.submit(fetch_all).result(timeout=settings.ingest.timeout_seconds)
     except FutureTimeout:
         return _record(session, name, cfg.mode, started, "error", 0,
                        f"timed out after {settings.ingest.timeout_seconds}s", prev_good)

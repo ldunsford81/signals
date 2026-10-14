@@ -142,3 +142,36 @@ main { min-width: 0; }
 .alert-log td.changes-cell { white-space: normal; min-width: 240px; max-width: 360px; }
 .snapshot { position: sticky; left: 0; max-width: calc(100vw - 80px); }
 .snapshot pre { white-space: pre-wrap; word-break: break-word; }
+/* admin */
+.admin-block { margin: 0 0 22px; }
+.admin-block h2 { font-size: 15px; margin: 0 0 8px; }
+.block-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.block-head h2 { margin: 0; }
+.job-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.job-result { margin-top: 8px; padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid #2a78d6; font-size: 13px; }
+.job-result.bad { border-left-color: #b91c1c; }
+.job-result pre { max-height: 300px; overflow: auto; font-size: 12px; }
+.run-status { font-size: 12px; padding: 1px 6px; border-radius: 8px; background: #f3f4f6; }
+.rs-ok { background: #dcfce7; color: #166534; }
+.rs-partial { background: #fef3c7; color: #92400e; }
+.rs-error { background: #fee2e2; color: #991b1b; }
+.rs-skipped { background: #e5e7eb; color: #4b5563; }
+td.msg { white-space: normal; max-width: 420px; font-size: 12px; color: #52514e; }
+.editor { background: #fafafb; border: 1px solid var(--line); padding: 10px 12px; margin: 6px 0 10px; }
+.editor-row > td { background: #fafafb; white-space: normal; }
+.form-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 8px 14px; }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field.wide { grid-column: span 2; }
+.field input[type="text"], .field input:not([type]), .field input[type="number"], .field input[type="date"], .field select { font: inherit; padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; }
+.field input[type="checkbox"] { align-self: flex-start; margin-top: 4px; }
+.editor-foot { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.flag-row td { background: #fffbeb; }
+.flag-banner { margin: -16px -20px 16px; }
+button.link.danger { color: #b91c1c; margin-left: 10px; }
+td.actions { white-space: nowrap; }
+.csv-box { background: var(--panel); border: 1px solid var(--line); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.csv-box h3 { font-size: 14px; margin: 0; }
+.csv-box textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 6px; }
+.csv-box p { margin: 0; }
+.two-col > * { min-width: 0; }
+.csv-box code { word-break: break-all; }

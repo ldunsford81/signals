@@ -251,6 +251,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Companies
+         * @description Companies whose earnings date needs updating come first.
+         */
+        get: operations["companies_api_admin_companies_get"];
+        put?: never;
+        /** Create Company */
+        post: operations["create_company_api_admin_companies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/companies/{company_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Company */
+        put: operations["update_company_api_admin_companies__company_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Products */
+        get: operations["products_api_admin_products_get"];
+        put?: never;
+        /** Create Product */
+        post: operations["create_product_api_admin_products_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/products/{product_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Product */
+        put: operations["update_product_api_admin_products__product_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Announcements */
+        get: operations["announcements_api_admin_announcements_get"];
+        put?: never;
+        /** Create Announcement */
+        post: operations["create_announcement_api_admin_announcements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/announcements/{ann_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Announcement */
+        put: operations["update_announcement_api_admin_announcements__ann_id__put"];
+        post?: never;
+        /** Delete Announcement */
+        delete: operations["delete_announcement_api_admin_announcements__ann_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/import/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Templates */
+        get: operations["templates_api_admin_import_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/import/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Companies */
+        post: operations["import_companies_api_admin_import_companies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/import/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Products */
+        post: operations["import_products_api_admin_import_products_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -397,6 +557,53 @@ export interface components {
              */
             created_at: string;
         };
+        /** AnnouncementAdminOut */
+        AnnouncementAdminOut: {
+            /** Company Id */
+            company_id: number;
+            /** Product Id */
+            product_id?: number | null;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /** Type */
+            type: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Id */
+            id: number;
+            /** Ticker */
+            ticker: string;
+        };
+        /** AnnouncementIn */
+        AnnouncementIn: {
+            /** Company Id */
+            company_id: number;
+            /** Product Id */
+            product_id?: number | null;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "new_product" | "partnership" | "distribution" | "negative_event" | "other";
+            /** Title */
+            title: string;
+            /** Url */
+            url?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** AnnouncementOut */
         AnnouncementOut: {
             /** Id */
@@ -460,6 +667,52 @@ export interface components {
             /** Breadth Short Mean */
             breadth_short_mean?: number | null;
         };
+        /** CompanyIn */
+        CompanyIn: {
+            /** Ticker */
+            ticker: string;
+            /** Name */
+            name: string;
+            /** Exchange */
+            exchange?: string | null;
+            /** Sector */
+            sector?: string | null;
+            /**
+             * Is Demo
+             * @default false
+             */
+            is_demo: boolean;
+            /** Market Cap Usd M */
+            market_cap_usd_m?: number | null;
+            /** Analyst Count */
+            analyst_count?: number | null;
+            /**
+             * Benchmark Ticker
+             * @default XLY
+             */
+            benchmark_ticker: string;
+            /** Next Earnings Date */
+            next_earnings_date?: string | null;
+            /**
+             * Earnings Date Confirmed
+             * @default false
+             */
+            earnings_date_confirmed: boolean;
+            /** Fiscal Quarter End */
+            fiscal_quarter_end?: string | null;
+            /**
+             * Cashtag Exclusions
+             * @default []
+             */
+            cashtag_exclusions: string[];
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Notes */
+            notes?: string | null;
+        };
         /** CompanyInfo */
         CompanyInfo: {
             /** Id */
@@ -478,6 +731,81 @@ export interface components {
             analyst_count: number | null;
             /** Is Demo */
             is_demo: boolean;
+        };
+        /** CompanyOut */
+        CompanyOut: {
+            /** Ticker */
+            ticker: string;
+            /** Name */
+            name: string;
+            /** Exchange */
+            exchange?: string | null;
+            /** Sector */
+            sector?: string | null;
+            /**
+             * Is Demo
+             * @default false
+             */
+            is_demo: boolean;
+            /** Market Cap Usd M */
+            market_cap_usd_m?: number | null;
+            /** Analyst Count */
+            analyst_count?: number | null;
+            /**
+             * Benchmark Ticker
+             * @default XLY
+             */
+            benchmark_ticker: string;
+            /** Next Earnings Date */
+            next_earnings_date?: string | null;
+            /**
+             * Earnings Date Confirmed
+             * @default false
+             */
+            earnings_date_confirmed: boolean;
+            /** Fiscal Quarter End */
+            fiscal_quarter_end?: string | null;
+            /**
+             * Cashtag Exclusions
+             * @default []
+             */
+            cashtag_exclusions: string[];
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Notes */
+            notes?: string | null;
+            /** Id */
+            id: number;
+            /** Product Count */
+            product_count: number;
+            earnings?: components["schemas"]["EarningsFlag"] | null;
+        };
+        /** CsvError */
+        CsvError: {
+            /** Line */
+            line: number;
+            /** Error */
+            error: string;
+        };
+        /** CsvIn */
+        CsvIn: {
+            /** Csv */
+            csv: string;
+            /**
+             * Dry Run
+             * @default false
+             */
+            dry_run: boolean;
+        };
+        /** CsvTemplates */
+        CsvTemplates: {
+            /** Companies */
+            companies: string[];
+            /** Products */
+            products: string[];
         };
         /** DetailScan */
         DetailScan: {
@@ -529,6 +857,30 @@ export interface components {
             input_health: {
                 [key: string]: unknown;
             };
+        };
+        /** EarningsFlag */
+        EarningsFlag: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Status */
+            status: string;
+            /** Reason */
+            reason: string | null;
+            /** Source */
+            source: string;
+            /** Next Earnings Date */
+            next_earnings_date: string | null;
+            /** Confirmed */
+            confirmed: boolean | null;
+            /** Fiscal Quarter End */
+            fiscal_quarter_end: string | null;
+            /** Days To Earnings */
+            days_to_earnings: number | null;
+            /** Needs Date Update */
+            needs_date_update: boolean;
         };
         /** FeedCard */
         FeedCard: {
@@ -710,6 +1062,17 @@ export interface components {
             /** Judged */
             judged: boolean;
         };
+        /** ImportOut */
+        ImportOut: {
+            /** Created */
+            created: number;
+            /** Updated */
+            updated: number;
+            /** Errors */
+            errors: components["schemas"]["CsvError"][];
+            /** Applied */
+            applied: boolean;
+        };
         /** JobOut */
         JobOut: {
             /** Ok */
@@ -832,6 +1195,25 @@ export interface components {
             /** Alerts */
             alerts: components["schemas"]["AlertRow"][];
         };
+        /** ProductIn */
+        ProductIn: {
+            /** Company Id */
+            company_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Keywords
+             * @default []
+             */
+            keywords: string[];
+            /** Launched On */
+            launched_on?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+        };
         /** ProductInfo */
         ProductInfo: {
             /** Id */
@@ -844,6 +1226,29 @@ export interface components {
             launched_on: string | null;
             /** Active */
             active: boolean;
+        };
+        /** ProductOut */
+        ProductOut: {
+            /** Company Id */
+            company_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Keywords
+             * @default []
+             */
+            keywords: string[];
+            /** Launched On */
+            launched_on?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Id */
+            id: number;
+            /** Ticker */
+            ticker: string;
         };
         /** ReplayIn */
         ReplayIn: {
@@ -1487,6 +1892,400 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"];
+                };
+            };
+        };
+    };
+    companies_api_admin_companies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOut"][];
+                };
+            };
+        };
+    };
+    create_company_api_admin_companies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_company_api_admin_companies__company_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    products_api_admin_products_get: {
+        parameters: {
+            query?: {
+                company_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_product_api_admin_products_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_product_api_admin_products__product_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    announcements_api_admin_announcements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementAdminOut"][];
+                };
+            };
+        };
+    };
+    create_announcement_api_admin_announcements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_announcement_api_admin_announcements__ann_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ann_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_announcement_api_admin_announcements__ann_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ann_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    templates_api_admin_import_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CsvTemplates"];
+                };
+            };
+        };
+    };
+    import_companies_api_admin_import_companies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CsvIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_products_api_admin_import_products_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CsvIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

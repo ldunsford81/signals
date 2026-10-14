@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { Admin } from "./pages/Admin";
 import { Alerts } from "./pages/Alerts";
 import { Detail } from "./pages/Detail";
 import { Feed } from "./pages/Feed";
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/products/:id" element={<Detail />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/alerts" element={<Alerts />} />
+            <Route path="/admin" element={<Admin />} />
           </Route>
         </Routes>
       </BrowserRouter>

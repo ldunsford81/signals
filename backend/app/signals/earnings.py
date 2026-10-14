@@ -9,6 +9,9 @@ from app.db.models import Company
 from app.signals.store import AsOfView
 from app.sources.base import value_to_date
 
+# Earnings dates entered by hand in Admin are stored as observations under this source name.
+MANUAL_SOURCE = "earnings_manual"
+
 
 @dataclass
 class EarningsResult:
@@ -19,7 +22,7 @@ class EarningsResult:
     days_to_earnings: int | None
     days_left_in_quarter: int | None
     reason: str | None
-    source: str                      # observations | catalog | none
+    source: str                      # manual | observations | catalog | none
 
     @property
     def quarter_open(self) -> bool | None:
@@ -37,8 +40,15 @@ class EarningsResult:
 def compute_earnings(view: AsOfView, company: Company, settings: Settings) -> EarningsResult:
     """Point in time: the latest earnings observation on or before as_of; else the catalog row."""
     as_of = view.as_of
+    man_v, _ = view.latest_value(MANUAL_SOURCE, company.ticker, "next_earnings_date")
     nxt_v, _ = view.latest_value("earnings", company.ticker, "next_earnings_date")
-    if nxt_v is not None:
+    if man_v is not None and value_to_date(man_v) >= as_of:
+        # A date typed in Admin is what the reviewer knows; it wins over the feed until it passes.
+        conf_v, _ = view.latest_value(MANUAL_SOURCE, company.ticker, "confirmed")
+        fqe_v, _ = view.latest_value(MANUAL_SOURCE, company.ticker, "fiscal_quarter_end")
+        nxt, confirmed = value_to_date(man_v), bool(conf_v) if conf_v is not None else None
+        fqe, src = (value_to_date(fqe_v) if fqe_v is not None else None), "manual"
+    elif nxt_v is not None:
         conf_v, _ = view.latest_value("earnings", company.ticker, "confirmed")
         fqe_v, _ = view.latest_value("earnings", company.ticker, "fiscal_quarter_end")
         nxt, confirmed = value_to_date(nxt_v), bool(conf_v) if conf_v is not None else None

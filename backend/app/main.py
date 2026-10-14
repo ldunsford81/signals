@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.admin_routes import router as admin_router
 from app.api.routes import router
 from app.core.config import ConfigError, load_settings
 from app.core.logging import get_logger, setup_logging
@@ -58,6 +59,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Consumer Product Trend Monitor", version="0.1.0", lifespan=lifespan)
 app.include_router(router)
+app.include_router(admin_router)
 
 
 @app.get("/api/health")

@@ -213,3 +213,35 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   at 20 days. Some cells clear the floor; most are still "too few to judge", which is honest.
 - **`ctm daily`** now runs evaluate after the scan. Replay is CLI/API only (the Admin buttons arrive in
   step 11); `POST /api/replay` runs synchronously.
+
+## Admin (step 11)
+
+- **Catalog edits only.** Admin writes to `companies`, `products` and `announcements` (and appends
+  `earnings_manual` observations, below). Companies and products are deactivated rather than deleted,
+  because observations, signal states and alerts refer to them; announcements can be deleted.
+- **Tickers and product names are fixed once created.** Observations are keyed on the ticker and the
+  demo series follow the product name, so renaming would silently orphan history. To rename,
+  deactivate and add a new one. Keywords, dates, benchmark, flags and notes are editable.
+- **Manual earnings dates.** Editing a company's earnings fields also writes them as observations
+  under the source `earnings_manual`, dated at the latest live scan date (or the last completed
+  session). The scan uses a manual date over the earnings feed for as long as that date is today or
+  later; once it passes, the feed is used again. This keeps the fix point-in-time (replay before the
+  edit doesn't see it) and stops a stale feed (scenario 11, FIVE) from undoing it on the next ingest.
+- **Flags.** "Needs a date update" is computed exactly as the scan would see earnings today (manual,
+  then feed, then catalog). Flagged companies sort to the top of the company table and appear in a
+  banner on the Admin page.
+- **New entities backfill.** When a source has never stored anything for an entity (a product or
+  company just added), ingest fetches the full history window for it instead of the incremental
+  window, so it isn't `unknown` for 60 days.
+- **Demo profile for added products.** In demo mode, a product the demo universe doesn't know (added
+  in Admin or by CSV) gets a synthetic rising-attention profile starting 12 days before the anchor. That
+  is what makes "add a product, run daily, see the alert log update" observable; its stage then depends
+  on its company's price, retail and earnings like any other product. Like all demo data it is
+  synthetic and the banner says so.
+- **CSV import** is all-or-nothing: every row is validated first and, if any row fails, nothing is
+  written and the errors are listed by line number. "Check" runs the same validation as a dry run.
+  Companies match on ticker, products on ticker + name; existing rows are updated. Keywords in the
+  products CSV are separated by `;`. Booleans accept yes/no, true/false, 1/0.
+- **Jobs.** The Admin buttons call the same endpoints as the CLI (`/api/ingest`, `/api/scan`,
+  `/api/daily`, `/api/replay`, `/api/evaluate`); they run synchronously and show a one-line summary
+  plus the full JSON result. Source modes and scopes are read-only here (they live in config).
