@@ -1,0 +1,89 @@
+# Consumer Product Trend Monitor — every threshold, window, stage rule and source setting.
+# Secrets never go here; they live in .env. Every scan validates and hashes this file and
+# stores it in config_versions, so alerts always point at the config that produced them.
+
+demo:
+  anchor_date: null          # null = last completed US trading session at seed time
+  history_days: 400
+  random_seed: 20261014
+
+earnings:
+  window_days: [42, 98]
+  require_open_quarter_for_entry: false
+
+health:
+  max_staleness_days: {price: 4, search_interest: 8, social_mentions: 4,
+                       ticker_search_interest: 8, cashtag_mentions: 3}
+  min_history_days: {attention: 60, price: 60, retail: 30}
+  min_baseline_index: 5
+
+# Which source metrics feed each signal family. Calculators read families, never named sources.
+families:
+  attention:
+    - {source: search_interest, metric: interest_index, sparse_floor: true}
+    - {source: social_mentions, metric: mentions}
+  price:
+    close: {source: price, metric: close}
+    volume: {source: price, metric: volume}
+  retail:
+    - {source: ticker_search_interest, metric: interest_index, sparse_floor: true}
+    - {source: cashtag_mentions, metric: mention_count, breadth_metric: unique_accounts}
+
+attention:
+  short_window: 7
+  baseline_window: [8, 56]
+  accelerating: {min_ratio: 1.5, min_z: 2.0}
+  persistence: {days_required: 4, of_last: 5}
+  min_accelerating_sources: 2
+  allow_single_source_when_only_one_healthy: true
+  seasonality: {min_history_days: 365, min_yoy_ratio: 1.2}
+  signal_lookback_days: 90
+  announcement_lookback_days: 14
+
+price_response:
+  no_signal_lookback_days: 20
+  volume_ratio_windows: [5, 60]
+  early_move: {min_relative_return: 0.03, min_volume_ratio: 1.5}
+  clear_acceleration: {min_relative_return: 0.08, min_volume_ratio: 1.5}
+
+retail:
+  short_window: 3
+  baseline_window: [4, 30]
+  rising: {min_ratio: 1.5, min_z: 2.0}
+  elevated: {min_ratio: 3.0, min_z: 3.0}
+  cashtag_min_unique_account_ratio: 1.3
+
+stages:   # evaluated top to bottom, first match wins
+  - {name: data_gap, when: {attention_elevated_within_days: 10, any_required_unknown: [price, retail, earnings]}}
+  - {name: exit_review, when: {attention_elevated_within_days: 60, price: [early_move, clear_acceleration], retail: [rising, elevated]}}
+  - {name: entry_review, when: {attention: [elevated], price: [flat], retail: [quiet], earnings: inside_window}}
+  - {name: early_recognition, when: {attention: [elevated], price: [early_move], retail: [quiet, rising]}}
+  - {name: watch, when: {attention: [elevated]}}
+
+reportable_stages: [entry_review, early_recognition, exit_review]
+stage_priority: [exit_review, entry_review, early_recognition, watch, data_gap, none]
+
+evaluation:
+  horizons_trading_days: [5, 20, 60]
+  include_through_earnings: true
+  dedupe_days: 30
+  min_sample_to_judge: 20
+  hit: {entry_review: positive_excess, early_recognition: positive_excess, exit_review: negative_excess_20d}
+
+ingest:
+  timeout_seconds: 120
+  overlap_days: 3            # re-fetch this many days before the last good date
+  default_lookback_days: 14  # used when a source has no prior good run
+
+sources:
+  search_interest:        {mode: demo, scope: watchlist, snapshot_window_days: 400}
+  social_mentions:        {mode: demo, scope: watchlist}
+  price:                  {mode: demo, scope: watchlist, benchmarks: [XLY, XRT, IJH]}
+  earnings:               {mode: demo}            # or csv: data/earnings.csv
+  ticker_search_interest: {mode: demo, scope: watchlist, snapshot_window_days: 400}
+  cashtag_mentions:       {mode: demo, scope: watchlist, sample_scope: active_only, monthly_budget_usd: 25}
+
+schedule:
+  in_process_enabled: false
+  cron_local: "30 8 * * 2-6"
+  timezone: Australia/Sydney
