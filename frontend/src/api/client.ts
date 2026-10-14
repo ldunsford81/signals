@@ -37,3 +37,10 @@ export const api = {
   scan: () => request<JobOut>("POST", "/api/scan", undefined, {}),
   daily: () => request<JobOut>("POST", "/api/daily", undefined, {}),
 };
+
+export type ProductDetail = S["ProductDetailOut"];
+export type SourceSeries = S["SourceSeries"];
+
+export const productApi = {
+  detail: (id: number, days: number) => request<ProductDetail>("GET", `/api/products/${id}`, { days }),
+};

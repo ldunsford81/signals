@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Iterator
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,7 @@ from app.api.schemas import (
     AttentionBadge,
     JobOut,
     PriceBadge,
+    ProductDetailOut,
     RetailBadge,
     RunRequest,
     ScanInfo,
@@ -25,6 +26,7 @@ from app.core.config import ConfigError, Settings, load_settings
 from app.db.models import Company, Product, Scan, SignalState, SourceRun
 from app.db.session import session_factory
 from app.pipeline import jobs
+from app.pipeline.detail import NotFound, product_detail
 from app.sources.demo.state import stored_anchor
 
 router = APIRouter(prefix="/api")
@@ -144,6 +146,15 @@ def watchlist(
     rank = {s: i for i, s in enumerate(order)}
     rows.sort(key=lambda r: (rank.get(r.stage, len(order)), -(r.attention.score or float("-inf")), r.ticker, r.product))
     return WatchlistOut(scan=scan_info(scan), earnings_window_days=(lo, hi), stage_order=order, total=total, rows=rows)
+
+
+@router.get("/products/{product_id}", response_model=ProductDetailOut)
+def product(product_id: int, scan_id: int | None = None, days: int = Query(180, ge=30, le=400),
+            session: Session = Depends(get_session)) -> ProductDetailOut:
+    try:
+        return ProductDetailOut.model_validate(product_detail(session, load_settings(), product_id, scan_id, days))
+    except NotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 def _job(fn, *a, **kw) -> JobOut:

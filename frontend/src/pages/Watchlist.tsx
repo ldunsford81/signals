@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api, type WatchlistQuery, type WatchlistRow } from "../api/client";
 import { Badge, Tag } from "../components/Badge";
 
@@ -36,7 +37,9 @@ function Row({ r }: { r: WatchlistRow }) {
         {r.is_demo && <Tag title="Fictional demo company">demo</Tag>}
       </td>
       <td className="mono">{r.ticker}</td>
-      <td>{r.product}</td>
+      <td>
+        <Link to={`/products/${r.product_id}`}>{r.product}</Link>
+      </td>
       <td>
         <Badge kind="stage" value={r.stage} />
       </td>

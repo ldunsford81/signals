@@ -238,6 +238,18 @@ def _with_scenario_products() -> list[CompanySpec]:
 COMPANIES: list[CompanySpec] = _with_scenario_products()
 BY_TICKER: dict[str, CompanySpec] = {c.ticker: c for c in COMPANIES}
 
+# Hand-entered timeline events for the demo: (ticker, product index or None, offset, type, title)
+ANNOUNCEMENTS = [
+    ("CROX", 0, -13, "partnership", "Charm clog collab announced with streetwear label"),
+    ("ONON", 0, -36, "new_product", "Cloudtilt trainer colourway drop"),
+    ("ONON", None, -9, "distribution", "Expanded wholesale distribution in Asia"),
+    ("ELF", 0, -17, "new_product", "Glow reviver lip oil new shades"),
+    ("WRBY", 0, -12, "distribution", "Contact lens subscription opens in two new states"),
+    ("COTY", 0, -14, "partnership", "Burberry Goddess celebrity campaign"),
+    ("YETI", 0, -15, "new_product", "Hopper backpack cooler fall colours"),
+    ("FIVE", None, -40, "negative_event", "Store closures in two regions"),
+]
+
 # Expected stage per scenario product on the anchor date (used by the end-to-end test and the README).
 EXPECTED = {
     ("CROX", "Charm clog collab"): {"stage": "entry_review"},

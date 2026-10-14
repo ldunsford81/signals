@@ -131,3 +131,28 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   UI treats naive timestamps from the API as UTC when showing local time.
 - **Scheduler.** APScheduler 3 numbers weekdays from Monday, unlike cron, so the configured cron
   expression is translated with day names before use.
+
+## Detail screen (step 8)
+
+- **No dual axes.** Each source gets its own panel (small multiples) because sources have
+  different units (0–100 index vs. counts). Price and volume are two stacked panels. All panels on
+  the page share one time axis (`[as_of − window, as_of]`) and a synced crosshair, so the signal-start
+  marker and announcement markers line up vertically across every chart.
+- **What is plotted.** Attention and retail panels plot the short-window mean (7-day / 3-day, the
+  quantity the rules test) in series colour, the daily values as a thin neutral context line, and the
+  baseline as a band of mean ± 2σ over the baseline window. The cashtag panel adds unique accounts
+  (3-day mean) when that name is in the post sample; otherwise the panel says it is not sampled.
+- **Benchmark rebasing.** The benchmark is rescaled to the stock's close on the same base date the
+  price-response calculation used (last close before signal start, or 20 sessions back). When price
+  is `unknown` there is no base date, so it is rebased at the first close in the window and the
+  subtitle says so.
+- **Computed in the API.** Bands, rebasing and point-in-time reads happen in
+  `pipeline/detail.py` (same `ObservationRepository` the scan uses); the page only draws.
+- **Colours.** Slot 1 `#2a78d6` for the product/stock's own series, slot 2 `#eb6834` for its
+  comparison (benchmark, unique accounts), checked with the dataviz palette validator (all checks
+  pass in light mode). The app is light-only for now.
+- **Demo announcements.** Eight synthetic announcements are seeded so the markers have something to
+  show before the Admin screen (step 11) exists. Markers are labelled A1, A2… and listed in a table
+  under the charts.
+- **Window presets** 90 / 180 / 365 days (API accepts 30–400). The page keeps the previous render at
+  reduced opacity while a new window loads.

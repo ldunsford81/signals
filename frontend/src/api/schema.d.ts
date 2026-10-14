@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/products/{product_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Product */
+        get: operations["product_api_products__product_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ingest": {
         parameters: {
             query?: never;
@@ -110,6 +127,53 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AlertRow */
+        AlertRow: {
+            /** Id */
+            id: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Stage */
+            stage: string;
+            /** Prior Stage */
+            prior_stage: string | null;
+            /** Changed Fields */
+            changed_fields: {
+                [key: string]: unknown;
+            }[];
+            /** Summary */
+            summary: string;
+            /** Config Hash */
+            config_hash: string;
+            /** Trigger */
+            trigger: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AnnouncementOut */
+        AnnouncementOut: {
+            /** Id */
+            id: number;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /** Type */
+            type: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string | null;
+            /** Product Id */
+            product_id: number | null;
+        };
         /** AttentionBadge */
         AttentionBadge: {
             /** Status */
@@ -129,10 +193,130 @@ export interface components {
              */
             seasonal: boolean;
         };
+        /** BandPoint */
+        BandPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: number | null;
+            /** Short Mean */
+            short_mean: number | null;
+            /** Baseline Mean */
+            baseline_mean: number | null;
+            /** Band Low */
+            band_low: number | null;
+            /** Band High */
+            band_high: number | null;
+            /** Ratio */
+            ratio: number | null;
+            /** Z */
+            z: number | null;
+            /** Breadth Value */
+            breadth_value?: number | null;
+            /** Breadth Short Mean */
+            breadth_short_mean?: number | null;
+        };
+        /** CompanyInfo */
+        CompanyInfo: {
+            /** Id */
+            id: number;
+            /** Ticker */
+            ticker: string;
+            /** Name */
+            name: string;
+            /** Sector */
+            sector: string | null;
+            /** Benchmark */
+            benchmark: string;
+            /** Market Cap Usd M */
+            market_cap_usd_m: number | null;
+            /** Analyst Count */
+            analyst_count: number | null;
+            /** Is Demo */
+            is_demo: boolean;
+        };
+        /** DetailScan */
+        DetailScan: {
+            /** Id */
+            id: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Trigger */
+            trigger: string;
+            /** Config Hash */
+            config_hash: string;
+            /** Finished At */
+            finished_at: string | null;
+        };
+        /** DetailState */
+        DetailState: {
+            /** Stage */
+            stage: string;
+            /** Attention Status */
+            attention_status: string;
+            /** Attention Score */
+            attention_score: number | null;
+            /** Attention Components */
+            attention_components: {
+                [key: string]: unknown;
+            };
+            /** Price Response */
+            price_response: string;
+            /** Price Components */
+            price_components: {
+                [key: string]: unknown;
+            };
+            /** Retail Status */
+            retail_status: string;
+            /** Retail Components */
+            retail_components: {
+                [key: string]: unknown;
+            };
+            /** Signal Start Date */
+            signal_start_date: string | null;
+            /** Days To Earnings */
+            days_to_earnings: number | null;
+            /** Days Left In Quarter */
+            days_left_in_quarter: number | null;
+            /** Input Health */
+            input_health: {
+                [key: string]: unknown;
+            };
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HistoryRow */
+        HistoryRow: {
+            /** Scan Id */
+            scan_id: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Trigger */
+            trigger: string;
+            /** Config Hash */
+            config_hash: string;
+            /** Stage */
+            stage: string;
+            /** Attention */
+            attention: string;
+            /** Price */
+            price: string;
+            /** Retail */
+            retail: string;
+            /** Days To Earnings */
+            days_to_earnings: number | null;
         };
         /** JobOut */
         JobOut: {
@@ -157,6 +341,58 @@ export interface components {
             volume_ratio?: number | null;
             /** Benchmark */
             benchmark?: string | null;
+        };
+        /** PricePoint */
+        PricePoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Close */
+            close: number | null;
+            /** Volume */
+            volume: number | null;
+            /** Benchmark Rebased */
+            benchmark_rebased: number | null;
+        };
+        /** ProductDetailOut */
+        ProductDetailOut: {
+            product: components["schemas"]["ProductInfo"];
+            company: components["schemas"]["CompanyInfo"];
+            scan: components["schemas"]["DetailScan"] | null;
+            state: components["schemas"]["DetailState"] | null;
+            /** Window Start */
+            window_start: string | null;
+            /** Attention Series */
+            attention_series: components["schemas"]["SourceSeries"][];
+            /** Price Series */
+            price_series: components["schemas"]["PricePoint"][];
+            /** Benchmark Scale */
+            benchmark_scale?: number | null;
+            /** Benchmark Rebased On */
+            benchmark_rebased_on?: string | null;
+            /** Retail Series */
+            retail_series: components["schemas"]["SourceSeries"][];
+            /** Announcements */
+            announcements: components["schemas"]["AnnouncementOut"][];
+            /** History */
+            history: components["schemas"]["HistoryRow"][];
+            /** Alerts */
+            alerts: components["schemas"]["AlertRow"][];
+        };
+        /** ProductInfo */
+        ProductInfo: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Keywords */
+            keywords: string[];
+            /** Launched On */
+            launched_on: string | null;
+            /** Active */
+            active: boolean;
         };
         /** RetailBadge */
         RetailBadge: {
@@ -196,6 +432,21 @@ export interface components {
             finished_at: string | null;
             /** Status */
             status: string;
+        };
+        /** SourceSeries */
+        SourceSeries: {
+            /** Source */
+            source: string;
+            /** Metric */
+            metric: string;
+            /** Short Window */
+            short_window: number;
+            /** Rescaled History */
+            rescaled_history: boolean;
+            /** Breadth Metric */
+            breadth_metric?: string | null;
+            /** Points */
+            points: components["schemas"]["BandPoint"][];
         };
         /** SourceStatus */
         SourceStatus: {
@@ -354,6 +605,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    product_api_products__product_id__get: {
+        parameters: {
+            query?: {
+                scan_id?: number | null;
+                days?: number;
+            };
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetailOut"];
                 };
             };
             /** @description Validation Error */

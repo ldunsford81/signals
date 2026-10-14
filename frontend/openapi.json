@@ -155,6 +155,73 @@
         }
       }
     },
+    "/api/products/{product_id}": {
+      "get": {
+        "summary": "Product",
+        "operationId": "product_api_products__product_id__get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scan Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 400,
+              "minimum": 30,
+              "default": 180,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ingest": {
       "post": {
         "summary": "Ingest",
@@ -313,6 +380,125 @@
   },
   "components": {
     "schemas": {
+      "AlertRow": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "prior_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Stage"
+          },
+          "changed_fields": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Changed Fields"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "as_of",
+          "stage",
+          "prior_stage",
+          "changed_fields",
+          "summary",
+          "config_hash",
+          "trigger",
+          "created_at"
+        ],
+        "title": "AlertRow"
+      },
+      "AnnouncementOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_date",
+          "type",
+          "title",
+          "url",
+          "product_id"
+        ],
+        "title": "AnnouncementOut"
+      },
       "AttentionBadge": {
         "properties": {
           "status": {
@@ -358,6 +544,338 @@
         ],
         "title": "AttentionBadge"
       },
+      "BandPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "short_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Mean"
+          },
+          "baseline_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Mean"
+          },
+          "band_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Band Low"
+          },
+          "band_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Band High"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          },
+          "breadth_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth Value"
+          },
+          "breadth_short_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth Short Mean"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "value",
+          "short_mean",
+          "baseline_mean",
+          "band_low",
+          "band_high",
+          "ratio",
+          "z"
+        ],
+        "title": "BandPoint"
+      },
+      "CompanyInfo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark"
+          },
+          "market_cap_usd_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Cap Usd M"
+          },
+          "analyst_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analyst Count"
+          },
+          "is_demo": {
+            "type": "boolean",
+            "title": "Is Demo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ticker",
+          "name",
+          "sector",
+          "benchmark",
+          "market_cap_usd_m",
+          "analyst_count",
+          "is_demo"
+        ],
+        "title": "CompanyInfo"
+      },
+      "DetailScan": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "as_of",
+          "trigger",
+          "config_hash",
+          "finished_at"
+        ],
+        "title": "DetailScan"
+      },
+      "DetailState": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "attention_status": {
+            "type": "string",
+            "title": "Attention Status"
+          },
+          "attention_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attention Score"
+          },
+          "attention_components": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attention Components"
+          },
+          "price_response": {
+            "type": "string",
+            "title": "Price Response"
+          },
+          "price_components": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Price Components"
+          },
+          "retail_status": {
+            "type": "string",
+            "title": "Retail Status"
+          },
+          "retail_components": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Retail Components"
+          },
+          "signal_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signal Start Date"
+          },
+          "days_to_earnings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Earnings"
+          },
+          "days_left_in_quarter": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Left In Quarter"
+          },
+          "input_health": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Input Health"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "attention_status",
+          "attention_score",
+          "attention_components",
+          "price_response",
+          "price_components",
+          "retail_status",
+          "retail_components",
+          "signal_start_date",
+          "days_to_earnings",
+          "days_left_in_quarter",
+          "input_health"
+        ],
+        "title": "DetailState"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -370,6 +888,67 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HistoryRow": {
+        "properties": {
+          "scan_id": {
+            "type": "integer",
+            "title": "Scan Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "attention": {
+            "type": "string",
+            "title": "Attention"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "retail": {
+            "type": "string",
+            "title": "Retail"
+          },
+          "days_to_earnings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Earnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scan_id",
+          "as_of",
+          "trigger",
+          "config_hash",
+          "stage",
+          "attention",
+          "price",
+          "retail",
+          "days_to_earnings"
+        ],
+        "title": "HistoryRow"
       },
       "JobOut": {
         "properties": {
@@ -463,6 +1042,222 @@
           "status"
         ],
         "title": "PriceBadge"
+      },
+      "PricePoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume"
+          },
+          "benchmark_rebased": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Rebased"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "close",
+          "volume",
+          "benchmark_rebased"
+        ],
+        "title": "PricePoint"
+      },
+      "ProductDetailOut": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductInfo"
+          },
+          "company": {
+            "$ref": "#/components/schemas/CompanyInfo"
+          },
+          "scan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetailScan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetailState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "window_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Start"
+          },
+          "attention_series": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSeries"
+            },
+            "type": "array",
+            "title": "Attention Series"
+          },
+          "price_series": {
+            "items": {
+              "$ref": "#/components/schemas/PricePoint"
+            },
+            "type": "array",
+            "title": "Price Series"
+          },
+          "benchmark_scale": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Scale"
+          },
+          "benchmark_rebased_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Rebased On"
+          },
+          "retail_series": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSeries"
+            },
+            "type": "array",
+            "title": "Retail Series"
+          },
+          "announcements": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementOut"
+            },
+            "type": "array",
+            "title": "Announcements"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryRow"
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/AlertRow"
+            },
+            "type": "array",
+            "title": "Alerts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "company",
+          "scan",
+          "state",
+          "window_start",
+          "attention_series",
+          "price_series",
+          "retail_series",
+          "announcements",
+          "history",
+          "alerts"
+        ],
+        "title": "ProductDetailOut"
+      },
+      "ProductInfo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords"
+          },
+          "launched_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Launched On"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "keywords",
+          "launched_on",
+          "active"
+        ],
+        "title": "ProductInfo"
       },
       "RetailBadge": {
         "properties": {
@@ -583,6 +1378,53 @@
           "status"
         ],
         "title": "ScanInfo"
+      },
+      "SourceSeries": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "short_window": {
+            "type": "integer",
+            "title": "Short Window"
+          },
+          "rescaled_history": {
+            "type": "boolean",
+            "title": "Rescaled History"
+          },
+          "breadth_metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth Metric"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/BandPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "metric",
+          "short_window",
+          "rescaled_history",
+          "points"
+        ],
+        "title": "SourceSeries"
       },
       "SourceStatus": {
         "properties": {

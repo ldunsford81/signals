@@ -100,3 +100,124 @@ class JobOut(BaseModel):
     ok: bool
     result: dict[str, Any] | None = None
     error: str | None = None
+
+
+# ---- product detail ---------------------------------------------------------
+class BandPoint(BaseModel):
+    date: date
+    value: float | None
+    short_mean: float | None
+    baseline_mean: float | None
+    band_low: float | None
+    band_high: float | None
+    ratio: float | None
+    z: float | None
+    breadth_value: float | None = None
+    breadth_short_mean: float | None = None
+
+
+class SourceSeries(BaseModel):
+    source: str
+    metric: str
+    short_window: int
+    rescaled_history: bool
+    breadth_metric: str | None = None
+    points: list[BandPoint]
+
+
+class PricePoint(BaseModel):
+    date: date
+    close: float | None
+    volume: float | None
+    benchmark_rebased: float | None
+
+
+class AnnouncementOut(BaseModel):
+    id: int
+    event_date: date
+    type: str
+    title: str
+    url: str | None
+    product_id: int | None
+
+
+class HistoryRow(BaseModel):
+    scan_id: int
+    as_of: date
+    trigger: str
+    config_hash: str
+    stage: str
+    attention: str
+    price: str
+    retail: str
+    days_to_earnings: int | None
+
+
+class AlertRow(BaseModel):
+    id: int
+    as_of: date
+    stage: str
+    prior_stage: str | None
+    changed_fields: list[dict[str, Any]]
+    summary: str
+    config_hash: str
+    trigger: str
+    created_at: datetime
+
+
+class ProductInfo(BaseModel):
+    id: int
+    name: str
+    keywords: list[str]
+    launched_on: date | None
+    active: bool
+
+
+class CompanyInfo(BaseModel):
+    id: int
+    ticker: str
+    name: str
+    sector: str | None
+    benchmark: str
+    market_cap_usd_m: float | None
+    analyst_count: int | None
+    is_demo: bool
+
+
+class DetailScan(BaseModel):
+    id: int
+    as_of: date
+    trigger: str
+    config_hash: str
+    finished_at: datetime | None
+
+
+class DetailState(BaseModel):
+    stage: str
+    attention_status: str
+    attention_score: float | None
+    attention_components: dict[str, Any]
+    price_response: str
+    price_components: dict[str, Any]
+    retail_status: str
+    retail_components: dict[str, Any]
+    signal_start_date: date | None
+    days_to_earnings: int | None
+    days_left_in_quarter: int | None
+    input_health: dict[str, Any]
+
+
+class ProductDetailOut(BaseModel):
+    product: ProductInfo
+    company: CompanyInfo
+    scan: DetailScan | None
+    state: DetailState | None
+    window_start: date | None
+    attention_series: list[SourceSeries]
+    price_series: list[PricePoint]
+    benchmark_scale: float | None = None
+    benchmark_rebased_on: date | None = None
+    retail_series: list[SourceSeries]
+    announcements: list[AnnouncementOut]
+    history: list[HistoryRow]
+    alerts: list[AlertRow]

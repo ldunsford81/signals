@@ -7,23 +7,25 @@ claim that the signal has alpha.
 
 Everything runs on seeded, synthetic demo data with **zero API keys and zero paid services**.
 
-> **Build status:** steps 1–7 of the build prompt are done (skeleton, config, calendar, models and
+> **Build status:** steps 1–8 of the build prompt are done (skeleton, config, calendar, models and
 > migration, six demo adapters, ingest with health recording, signal calculators, stage engine,
-> scan with alerts and change detection, CLI, API and the Watchlist screen). Detail, Review feed,
-> replay/evaluate, Alerts and Admin screens, and the live stubs come in steps 8–12.
+> scan with alerts and change detection, CLI, API, the Watchlist screen and the product Detail
+> screen). Review feed, replay/evaluate, Alerts and Admin screens, and the live stubs come in steps 9–12.
 
 ## Requirements
 
-- Python 3.12 or newer
-- Node.js 18 or newer (with npm)
+- Python 3.12 or newer. macOS ships Python 3.9, which is too old: install a newer one with
+  [Homebrew](https://brew.sh) (`brew install python@3.12`) and use `python3.12` below.
+- Node.js 18 or newer (with npm): `brew install node` on macOS.
 
 ## Install and run — macOS / Linux
 
 ```bash
 # 1. Backend
 cd backend
-python3 -m venv .venv
+python3.12 -m venv .venv          # macOS: not plain python3, which is 3.9
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -e ".[dev]"
 
 # 2. Seed the demo (creates data/ctm.db, runs migrations, loads 400 days of synthetic history)
@@ -43,6 +45,11 @@ cd frontend
 npm install
 npm run dev          # http://127.0.0.1:5173
 ```
+
+Click any product name on the watchlist to open its Detail page.
+
+Next time, you only need `cd backend && source .venv/bin/activate && ctm serve` in one terminal and
+`cd frontend && npm run dev` in another.
 
 ## Install and run — Windows (PowerShell)
 
@@ -167,7 +174,8 @@ backend/app/
   cli.py
 frontend/src/
   api/         typed client (types generated from OpenAPI)
-  pages/       Watchlist (Detail, Feed, Alerts, Admin to follow)
+  components/  badges, layout, TimeChart (shared time axis + crosshair)
+  pages/       Watchlist, Detail (Feed, Alerts, Admin to follow)
 config/settings.yaml
 DECISIONS.md
 ```

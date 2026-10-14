@@ -10,11 +10,11 @@ from app.core import calendar
 from app.core.config import Settings
 from app.core.logging import get_logger
 from app.core.paths import database_file
-from app.db.models import Company, Product
+from app.db.models import Announcement, Company, Product
 from app.db.session import get_engine, session_factory, upgrade_db
 from app.pipeline.ingest import RunSummary, run_ingest
 from app.sources.demo import state
-from app.sources.demo.universe import COMPANIES
+from app.sources.demo.universe import ANNOUNCEMENTS, COMPANIES
 
 log = get_logger("seed")
 
@@ -42,6 +42,17 @@ def load_catalog(session: Session, anchor: date) -> int:
             if p.name not in existing:
                 session.add(Product(company_id=c.id, name=p.name, keywords=list(p.keywords),
                                     launched_on=anchor + timedelta(days=p.launched_offset), active=True))
+    session.flush()
+    for ticker, idx, offset, kind, title in ANNOUNCEMENTS:
+        c = session.scalar(select(Company).where(Company.ticker == ticker))
+        if c is None or session.scalar(select(Announcement).where(Announcement.company_id == c.id,
+                                                                  Announcement.title == title)):
+            continue
+        products = session.scalars(select(Product).where(Product.company_id == c.id).order_by(Product.id)).all()
+        product = products[idx] if idx is not None else None
+        session.add(Announcement(company_id=c.id, product_id=product.id if product else None,
+                                 event_date=anchor + timedelta(days=offset), type=kind, title=title,
+                                 notes="Demo announcement (synthetic)."))
     session.commit()
     return added
 
