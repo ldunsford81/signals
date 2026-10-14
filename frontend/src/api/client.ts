@@ -54,3 +54,25 @@ export const feedApi = {
   feed: () => request<FeedOut>("GET", "/api/feed"),
   review: (alertId: number, body: ReviewIn) => request<ReviewOut>("POST", `/api/alerts/${alertId}/review`, undefined, body),
 };
+
+export type PerformanceOut = S["PerformanceOut"];
+export type PerformanceGroup = S["PerformanceGroup"];
+export type AlertLogOut = S["AlertLogOut"];
+export type AlertLogRow = S["AlertLogRow"];
+export type AlertDetailOut = S["AlertDetailOut"];
+
+export interface AlertQuery {
+  stage?: string;
+  trigger?: string;
+  config_hash?: string;
+  start?: string;
+  end?: string;
+  limit: number;
+}
+
+export const evalApi = {
+  performance: (combine: boolean) => request<PerformanceOut>("GET", "/api/evaluation", { combine_triggers: combine }),
+  alerts: (q: AlertQuery) => request<AlertLogOut>("GET", "/api/alerts", { ...q }),
+  alert: (id: number) => request<AlertDetailOut>("GET", `/api/alerts/${id}`),
+  evaluate: () => request<JobOut>("POST", "/api/evaluate", undefined, {}),
+};

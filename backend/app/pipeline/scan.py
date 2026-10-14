@@ -58,6 +58,18 @@ def lineage(trigger: str) -> list[str]:
     return ["replay"] if trigger == "replay" else ["manual", "schedule"]
 
 
+def prior_scan(session: Session, scan: Scan) -> Scan | None:
+    """Most recent successful scan with an earlier as_of in the same lineage.
+
+    Replay histories are also kept per config version, so replaying under a new config builds its
+    own coherent sequence instead of diffing against another config's replay.
+    """
+    q = select(Scan).where(Scan.as_of < scan.as_of, Scan.status == "ok", Scan.trigger.in_(lineage(scan.trigger)))
+    if scan.trigger == "replay":
+        q = q.where(Scan.config_hash == scan.config_hash)
+    return session.scalar(q.order_by(Scan.as_of.desc(), Scan.id.desc()).limit(1))
+
+
 def fmt_pct(x: float | None) -> str:
     return "n/a" if x is None else f"{x * 100:+.1f}%"
 
@@ -157,7 +169,8 @@ def run_scan(session: Session, settings: Settings, as_of: date | None = None, tr
         result = _scan_body(session, settings, scan, repo)
         scan.status, scan.finished_at = "ok", utcnow()
         session.commit()
-        log.info("scan id=%s as_of=%s trigger=%s config=%s products=%d alerts=%d stages=%s", scan.id, as_of,
+        log.log(10 if trigger == "replay" else 20,
+                "scan id=%s as_of=%s trigger=%s config=%s products=%d alerts=%d stages=%s", scan.id, as_of,
                  trigger, chash, result.products, result.alerts_created, result.stages)
         return result
     except Exception as e:
@@ -178,9 +191,7 @@ def _scan_body(session: Session, settings: Settings, scan: Scan, repo: Observati
                                 .options(selectinload(Company.products)).order_by(Company.id)).all()
     anns = _announcements(session, as_of, settings.attention.announcement_lookback_days)
 
-    prior = session.scalar(select(Scan).where(Scan.as_of < as_of, Scan.status == "ok",
-                                              Scan.trigger.in_(lineage(scan.trigger)))
-                           .order_by(Scan.as_of.desc(), Scan.id.desc()).limit(1))
+    prior = prior_scan(session, scan)
     prior_states = {s.product_id: s for s in session.scalars(
         select(SignalState).where(SignalState.scan_id == prior.id))} if prior else {}
 

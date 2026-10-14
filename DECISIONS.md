@@ -175,3 +175,41 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   selected decision again clears it back to `unreviewed`.
 - **Health panel** lists `data_gap` products with each unknown input and its reason. No alerts.
 - **Summary wording**: "1 source" is singular; otherwise the template is as specified.
+
+## Replay and evaluation (step 10)
+
+- **Replay range.** Default start = first stored observation + the attention minimum history
+  (60 days); default end = the last stored price date (capped at the last completed session). Every
+  NYSE session in between is scanned with `trigger = replay`, reading observations through the same
+  point-in-time store as the daily scan (loaded once for speed: ~0.25 s per day, ~1 minute for the
+  demo).
+- **Replay lineage is per config.** A replay scan's prior is the latest earlier replay scan *with the
+  same config hash*, so replaying under a new threshold builds its own coherent history. Re-running
+  replay skips days already replayed under the current config (safe to re-run). Live scans never diff
+  against replay scans and vice versa.
+- **Rescaled history.** The demo has one search snapshot per entity (pulled at the anchor), so every
+  replayed day reads it truncated to that day and the alert carries `rescaled_history`. This is the
+  spec's rule; it is flagged on every replay alert in the log.
+- **Returns.** Close on the alert date to close N trading days later (`add_sessions`), stock minus
+  benchmark (the benchmark recorded in the alert snapshot). `through_earnings` ends at the close of the
+  first session after the earnings date recorded in the alert snapshot (skipped if that date was
+  unknown). An outcome is `complete` once a close exists on or after its end date; until then the row
+  holds the return so far and is recomputed by each `evaluate`. Completed rows are never recomputed.
+- **Hit rules** come from config: `positive_excess` / `negative_excess`, optionally with a horizon
+  suffix (`negative_excess_20d`) that marks the headline horizon for that stage. Hit rates are shown for
+  every horizon with the same direction; the headline column is highlighted.
+- **Dedupe.** The first alert per company per stage within `dedupe_days` counts; later ones in that
+  window are shown as `dup` in the log and excluded from the performance numbers. Dedupe runs per config
+  version and per trigger group (or across both when "combine" is on).
+- **Groups** are (stage, config version, trigger group), where trigger group is `live` (manual +
+  schedule) or `replay`. They never mix unless the reviewer ticks "Combine replay and live alerts".
+  Cells with fewer than `min_sample_to_judge` completed, counted alerts are greyed out and labelled
+  "too few to judge".
+- **More historical episodes.** The prompt asks for 8–10; with that few, every performance cell stayed
+  under the 20-alert floor and the whole table was greyed out. The demo now plants 24 (15 where
+  attention leads price by 2–6 weeks, 9 where it does not), two per company, spaced so price windows
+  never overlap and all finished ~95 days before the anchor. Replay then yields 56 alerts with a mixed
+  record: entries win ~60–70% at 20/60 days, exits look early at 5 days but are right ~2/3 of the time
+  at 20 days. Some cells clear the floor; most are still "too few to judge", which is honest.
+- **`ctm daily`** now runs evaluate after the scan. Replay is CLI/API only (the Admin buttons arrive in
+  step 11); `POST /api/replay` runs synchronously.

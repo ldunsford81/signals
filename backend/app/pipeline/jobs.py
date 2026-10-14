@@ -10,7 +10,9 @@ from app.core.config import Settings, load_settings
 from app.core.logging import get_logger
 from app.core.paths import backups_dir, database_file
 from app.db.session import session_factory, upgrade_db
+from app.pipeline.evaluate import run_evaluate
 from app.pipeline.ingest import run_ingest
+from app.pipeline.replay import run_replay
 from app.pipeline.scan import run_scan
 from app.pipeline.seed import seed
 
@@ -53,12 +55,27 @@ def backup_job() -> dict:
     return {"backup": str(dest)}
 
 
+def replay_job(start: date | None = None, end: date | None = None, settings: Settings | None = None) -> dict:
+    settings = settings or load_settings()
+    upgrade_db()
+    with session_factory()() as s:
+        return run_replay(s, settings, start=start, end=end)
+
+
+def evaluate_job(settings: Settings | None = None) -> dict:
+    settings = settings or load_settings()
+    upgrade_db()
+    with session_factory()() as s:
+        return run_evaluate(s, settings)
+
+
 def daily_job(as_of: date | None = None, trigger: str = "schedule") -> dict:
-    """Backup, then ingest, then scan. (Evaluate joins this chain when it is built.)"""
+    """Backup, then ingest, then scan, then evaluate."""
     settings = load_settings()
     out = {"backup": backup_job()}
     out["ingest"] = ingest_job(as_of=as_of, settings=settings)
     out["scan"] = scan_job(as_of=as_of, trigger=trigger, settings=settings)
+    out["evaluate"] = evaluate_job(settings=settings)
     return out
 
 

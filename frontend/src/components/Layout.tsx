@@ -25,6 +25,7 @@ export function Layout() {
             Watchlist
           </NavLink>
           <NavLink to="/feed">Review feed</NavLink>
+          <NavLink to="/alerts">Alerts &amp; evaluation</NavLink>
         </nav>
         <div className="asof">
           {s?.as_of ? (

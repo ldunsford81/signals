@@ -7,10 +7,11 @@ claim that the signal has alpha.
 
 Everything runs on seeded, synthetic demo data with **zero API keys and zero paid services**.
 
-> **Build status:** steps 1–9 of the build prompt are done (skeleton, config, calendar, models and
+> **Build status:** steps 1–10 of the build prompt are done (skeleton, config, calendar, models and
 > migration, six demo adapters, ingest with health recording, signal calculators, stage engine,
-> scan with alerts and change detection, CLI, API, and the Watchlist, product Detail and Review feed
-> screens). Replay/evaluate, the Alerts and Admin screens, and the live stubs come in steps 10–12.
+> scan with alerts and change detection, replay and evaluation, CLI, API, and the Watchlist, product
+> Detail, Review feed and Alerts & evaluation screens). The Admin screen and the live stubs come in
+> steps 11–12.
 
 ## Requirements
 
@@ -34,6 +35,11 @@ ctm seed
 # 3. Scan as of the last completed US trading session
 ctm scan
 
+# 3b. Score the rules on history: replay every trading day in the seeded history (~1 minute),
+#     then fill forward returns for every alert
+ctm replay
+ctm evaluate
+
 # 4. Start the API (http://127.0.0.1:8000, docs at /docs)
 ctm serve
 ```
@@ -49,6 +55,9 @@ npm run dev          # http://127.0.0.1:5173
 Click any product name on the watchlist to open its Detail page. **Review feed** (top nav) lists
 today's entry, early-recognition and exit cases with the reason each one fired, what changed since
 the last scan, and buttons to record your decision (acted / passed / exited + a note).
+**Alerts & evaluation** shows the rules-performance table (hit rate, median and mean excess return
+per horizon, by stage, config version and trigger) and the immutable alert log with each alert's
+outcomes and full input snapshot.
 
 Next time, you only need `cd backend && source .venv/bin/activate && ctm serve` in one terminal and
 `cd frontend && npm run dev` in another.
@@ -62,9 +71,11 @@ py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 
-# 2-4. Seed, scan, serve
+# 2-4. Seed, scan, replay + evaluate, serve
 ctm seed
 ctm scan
+ctm replay
+ctm evaluate
 ctm serve
 ```
 
@@ -85,12 +96,13 @@ Then open http://127.0.0.1:5173.
 | `ctm seed [--reset]` | — | Create the DB, run migrations, load the demo catalog and demo observations. `--reset` deletes the DB and re-anchors the demo to today. |
 | `ctm ingest [--source S] [--as-of D]` | `POST /api/ingest` | Run every enabled adapter; write observations and `source_runs`. |
 | `ctm scan [--as-of D]` | `POST /api/scan` | Compute statuses, stages and alerts as of D (default: last completed US session). |
-| `ctm daily [--as-of D]` | `POST /api/daily` | Backup, then ingest, then scan. The UI's **Run daily** button calls the same code. |
+| `ctm daily [--as-of D]` | `POST /api/daily` | Backup, ingest, scan, then evaluate. The UI's **Run daily** button calls the same code. |
+| `ctm replay [--start D1] [--end D2]` | `POST /api/replay` | Run the scan for every trading day in the range (default: the whole stored history). Alerts are tagged `replay`. Re-running skips days already replayed under the same config. |
+| `ctm evaluate` | `POST /api/evaluate` | Fill `alert_outcomes` (5 / 20 / 60 trading days and through earnings) for every alert; unfinished horizons hold the return so far. |
 | `ctm backup` | — | Copy the SQLite file to `backups/` with a timestamp. |
 | `ctm serve` | — | Start the API on 127.0.0.1:8000. |
 | `ctm openapi` | — | Write `frontend/openapi.json`; `npm run gen:api` regenerates the typed client from it. |
 
-`ctm replay` and `ctm evaluate` arrive with step 10.
 
 ## What the demo shows
 
@@ -177,7 +189,7 @@ backend/app/
 frontend/src/
   api/         typed client (types generated from OpenAPI)
   components/  badges, layout, TimeChart (shared time axis + crosshair)
-  pages/       Watchlist, Detail, Feed (Alerts, Admin to follow)
+  pages/       Watchlist, Detail, Feed, Alerts (Admin to follow)
 config/settings.yaml
 DECISIONS.md
 ```

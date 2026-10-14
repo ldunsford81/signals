@@ -100,19 +100,23 @@ def no_lead_episode(start: int) -> tuple[Bump, list[PriceMove], list[Bump]]:
     return Bump(start, "episode", 3.0, hold=21), [PriceMove(start + 7, start + 35, -0.04)], []
 
 
-# Historical episodes for replay: (ticker, product index, episode)
-EPISODES = {
-    ("SONO", 1): lead_episode(-330, 14),
-    ("BOOT", 1): no_lead_episode(-310),
-    ("CROX", 1): lead_episode(-290, 28),
-    ("YETI", 1): no_lead_episode(-265),
-    ("ELF", 1): lead_episode(-250, 35),
-    ("FIVE", 0): lead_episode(-225, 21),
-    ("ZDMO", 0): no_lead_episode(-205),
-    ("COTY", 1): lead_episode(-190, 42),
-    ("WRBY", 1): no_lead_episode(-165),
-    ("OLPX", 1): lead_episode(-155, 14),
-}
+# Historical episodes for replay: (ticker, product index, episode). Two per company, spaced so their
+# price windows never overlap, all finished ~95 days before the anchor so today's scenarios stay clean.
+# 15 lead (attention leads price by 2–6 weeks) and 9 no-lead (price never follows).
+EPISODES: list[tuple[str, int, tuple]] = [
+    ("CROX", 1, lead_episode(-330, 14)), ("CROX", 2, no_lead_episode(-230)),
+    ("ONON", 1, lead_episode(-320, 21)), ("ONON", 1, no_lead_episode(-200)),
+    ("ELF", 1, lead_episode(-335, 35)), ("ELF", 2, lead_episode(-215, 14)),
+    ("YETI", 1, no_lead_episode(-300)), ("YETI", 1, lead_episode(-230, 28)),
+    ("SONO", 1, lead_episode(-330, 14)), ("SONO", 1, lead_episode(-220, 21)),
+    ("BOOT", 1, no_lead_episode(-310)), ("BOOT", 0, lead_episode(-225, 28)),
+    ("BIRK", 1, lead_episode(-325, 21)), ("BIRK", 1, no_lead_episode(-190)),
+    ("WRBY", 1, lead_episode(-300, 28)), ("WRBY", 1, no_lead_episode(-165)),
+    ("COTY", 1, lead_episode(-320, 42)), ("COTY", 1, lead_episode(-190, 14)),
+    ("OLPX", 1, lead_episode(-310, 14)), ("OLPX", 1, no_lead_episode(-180)),
+    ("FIVE", 0, lead_episode(-300, 21)), ("FIVE", 1, no_lead_episode(-200)),
+    ("ZDMO", 0, no_lead_episode(-320)), ("ZDMO", 1, lead_episode(-240, 35)),
+]
 
 ENTRY = Bump(-12, "step", 2.6)
 
@@ -222,11 +226,11 @@ def _with_scenario_products() -> list[CompanySpec]:
         for i, p in enumerate(c.products):
             kw = dict(product_bumps.get((c.ticker, i), {}))
             bumps = list(kw.pop("bumps", ()))
-            if (c.ticker, i) in EPISODES:
-                att, ep_moves, ep_retail = EPISODES[(c.ticker, i)]
-                bumps.append(att)
-                moves.extend(ep_moves)
-                retail.extend(ep_retail)
+            for ticker, idx, (att, ep_moves, ep_retail) in EPISODES:
+                if (ticker, idx) == (c.ticker, i):
+                    bumps.append(att)
+                    moves.extend(ep_moves)
+                    retail.extend(ep_retail)
             products.append(ProductSpec(name=p.name, keywords=p.keywords, base_search=p.base_search + 4 * i,
                                         base_social=p.base_social + 15 * i, bumps=tuple(bumps),
                                         launched_offset=-900 + 60 * i, **kw))

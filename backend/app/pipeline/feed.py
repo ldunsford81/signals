@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.db.models import Alert, AlertReview, Company, ConfigVersion, Product, Scan, SignalState
-from app.pipeline.scan import format_summary, lineage
+from app.pipeline.scan import format_summary, lineage, prior_scan
 from app.stages.engine import describe
 
 DECISIONS = ("unreviewed", "acted", "passed", "exited")
@@ -70,9 +70,7 @@ def build_feed(session: Session, settings: Settings, scan_id: int | None = None)
     cfg = _scan_settings(session, scan, settings)
     rules = {r.name: r for r in cfg.stages}
     rank = {s: i for i, s in enumerate(cfg.stage_priority)}
-    prior = session.scalar(select(Scan).where(Scan.as_of < scan.as_of, Scan.status == "ok",
-                                              Scan.trigger.in_(lineage(scan.trigger)))
-                           .order_by(Scan.as_of.desc(), Scan.id.desc()).limit(1))
+    prior = prior_scan(session, scan)
     prior_states = {s.product_id: s for s in session.scalars(
         select(SignalState).where(SignalState.scan_id == prior.id))} if prior else {}
 

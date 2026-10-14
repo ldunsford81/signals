@@ -317,3 +317,91 @@ class ReviewOut(BaseModel):
     decision: str
     note: str | None
     reviewed_at: datetime
+
+
+# ---- replay, evaluation and the alert log ----------------------------------------------
+class ReplayIn(BaseModel):
+    start: date | None = None
+    end: date | None = None
+
+
+class HorizonStats(BaseModel):
+    n: int
+    hits: int
+    hit_rate: float | None
+    median_excess: float | None
+    mean_excess: float | None
+    judged: bool
+
+
+class PerformanceGroup(BaseModel):
+    stage: str
+    config_hash: str
+    trigger: str
+    n_alerts: int
+    n_counted: int
+    hit_rule: str
+    headline_horizon: str | None
+    first_as_of: date
+    last_as_of: date
+    horizons: dict[str, HorizonStats]
+
+
+class PerformanceOut(BaseModel):
+    horizons: list[str]
+    min_sample_to_judge: int
+    dedupe_days: int
+    combine_triggers: bool
+    current_config_hash: str
+    groups: list[PerformanceGroup]
+
+
+class Outcome(BaseModel):
+    stock_return: float | None
+    benchmark_return: float | None
+    excess_return: float | None
+    complete: bool
+    computed_at: datetime | None = None
+
+
+class AlertLogRow(BaseModel):
+    id: int
+    as_of: date
+    stage: str
+    prior_stage: str | None
+    product_id: int
+    product: str
+    company: str
+    ticker: str
+    trigger: str
+    config_hash: str
+    summary: str
+    changed_fields: list[dict[str, Any]]
+    counted: bool
+    rescaled_history: bool
+    decision: str
+    outcomes: dict[str, Outcome]
+
+
+class AlertLogOut(BaseModel):
+    total: int
+    items: list[AlertLogRow]
+    horizons: list[str]
+    config_hashes: list[str]
+
+
+class AlertDetailOut(BaseModel):
+    id: int
+    as_of: date
+    stage: str
+    prior_stage: str | None
+    trigger: str
+    scan_id: int
+    product_id: int
+    company_id: int
+    summary: str
+    changed_fields: list[dict[str, Any]]
+    config_hash: str
+    created_at: datetime
+    input_snapshot: dict[str, Any]
+    outcomes: dict[str, Outcome]

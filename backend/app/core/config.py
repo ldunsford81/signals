@@ -153,6 +153,16 @@ class EvaluationCfg(Strict):
     min_sample_to_judge: int = 20
     hit: dict[str, str]
 
+    @field_validator("hit")
+    @classmethod
+    def _hit_rules(cls, v: dict[str, str]) -> dict[str, str]:
+        import re
+        for stage, rule in v.items():
+            if not re.fullmatch(r"(positive|negative)_excess(_\d+d)?", rule):
+                raise ValueError(f"hit rule for {stage} must look like positive_excess, negative_excess or "
+                                 f"negative_excess_20d (got '{rule}')")
+        return v
+
 
 class IngestCfg(Strict):
     timeout_seconds: int = 120

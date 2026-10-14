@@ -9,11 +9,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.schemas import (
+    AlertDetailOut,
+    AlertLogOut,
     AttentionBadge,
     FeedOut,
     JobOut,
+    PerformanceOut,
     PriceBadge,
     ProductDetailOut,
+    ReplayIn,
     RetailBadge,
     ReviewIn,
     ReviewOut,
@@ -30,6 +34,7 @@ from app.db.models import Company, Product, Scan, SignalState, SourceRun
 from app.db.session import session_factory
 from app.pipeline import jobs
 from app.pipeline.detail import NotFound, product_detail
+from app.pipeline.evaluate import alert_detail, list_alerts, performance
 from app.pipeline.feed import FeedError, build_feed, record_review, review_history
 from app.sources.demo.state import stored_anchor
 
@@ -166,6 +171,29 @@ def feed(scan_id: int | None = None, session: Session = Depends(get_session)) ->
     return FeedOut.model_validate(build_feed(session, load_settings(), scan_id))
 
 
+@router.get("/evaluation", response_model=PerformanceOut)
+def evaluation(combine_triggers: bool = False, session: Session = Depends(get_session)) -> PerformanceOut:
+    """Rules performance by stage, config version and trigger (replay and live kept apart unless combined)."""
+    return PerformanceOut.model_validate(performance(session, load_settings(), combine_triggers))
+
+
+@router.get("/alerts", response_model=AlertLogOut)
+def alerts(session: Session = Depends(get_session), stage: str | None = None,
+           trigger: str | None = Query(None, pattern="^(live|replay)$"), config_hash: str | None = None,
+           start: date | None = None, end: date | None = None, limit: int = Query(200, ge=1, le=1000),
+           offset: int = Query(0, ge=0)) -> AlertLogOut:
+    return AlertLogOut.model_validate(list_alerts(session, load_settings(), stage, trigger, config_hash, start, end,
+                                                  limit, offset))
+
+
+@router.get("/alerts/{alert_id}", response_model=AlertDetailOut)
+def alert(alert_id: int, session: Session = Depends(get_session)) -> AlertDetailOut:
+    d = alert_detail(session, alert_id)
+    if d is None:
+        raise HTTPException(status_code=404, detail=f"alert {alert_id} not found")
+    return AlertDetailOut.model_validate(d)
+
+
 @router.post("/alerts/{alert_id}/review", response_model=ReviewOut)
 def review(alert_id: int, body: ReviewIn, session: Session = Depends(get_session)) -> ReviewOut:
     """The only write the review screens make: append a row to alert_reviews. Alerts are never changed."""
@@ -206,3 +234,15 @@ def scan(req: RunRequest | None = None) -> JobOut:
 def daily(req: RunRequest | None = None) -> JobOut:
     req = req or RunRequest()
     return _job(jobs.daily_job, as_of=req.as_of, trigger="manual")
+
+
+@router.post("/replay", response_model=JobOut)
+def replay(req: ReplayIn | None = None) -> JobOut:
+    """Runs synchronously (about a minute for the full demo history)."""
+    req = req or ReplayIn()
+    return _job(jobs.replay_job, start=req.start, end=req.end)
+
+
+@router.post("/evaluate", response_model=JobOut)
+def evaluate() -> JobOut:
+    return _job(jobs.evaluate_job)

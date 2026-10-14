@@ -268,6 +268,222 @@
         }
       }
     },
+    "/api/evaluation": {
+      "get": {
+        "summary": "Evaluation",
+        "description": "Rules performance by stage, config version and trigger (replay and live kept apart unless combined).",
+        "operationId": "evaluation_api_evaluation_get",
+        "parameters": [
+          {
+            "name": "combine_triggers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Combine Triggers"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerformanceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "summary": "Alerts",
+        "operationId": "alerts_api_alerts_get",
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage"
+            }
+          },
+          {
+            "name": "trigger",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(live|replay)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Trigger"
+            }
+          },
+          {
+            "name": "config_hash",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Config Hash"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertLogOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/{alert_id}": {
+      "get": {
+        "summary": "Alert",
+        "operationId": "alert_api_alerts__alert_id__get",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Alert Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/alerts/{alert_id}/review": {
       "post": {
         "summary": "Review",
@@ -496,6 +712,70 @@
         }
       }
     },
+    "/api/replay": {
+      "post": {
+        "summary": "Replay",
+        "description": "Runs synchronously (about a minute for the full demo history).",
+        "operationId": "replay_api_replay_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReplayIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Req"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evaluate": {
+      "post": {
+        "summary": "Evaluate",
+        "operationId": "evaluate_api_evaluate_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "summary": "Health",
@@ -519,6 +799,241 @@
   },
   "components": {
     "schemas": {
+      "AlertDetailOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "prior_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Stage"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "scan_id": {
+            "type": "integer",
+            "title": "Scan Id"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "company_id": {
+            "type": "integer",
+            "title": "Company Id"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "changed_fields": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Changed Fields"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "input_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Input Snapshot"
+          },
+          "outcomes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Outcome"
+            },
+            "type": "object",
+            "title": "Outcomes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "as_of",
+          "stage",
+          "prior_stage",
+          "trigger",
+          "scan_id",
+          "product_id",
+          "company_id",
+          "summary",
+          "changed_fields",
+          "config_hash",
+          "created_at",
+          "input_snapshot",
+          "outcomes"
+        ],
+        "title": "AlertDetailOut"
+      },
+      "AlertLogOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AlertLogRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "horizons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Horizons"
+          },
+          "config_hashes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Config Hashes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items",
+          "horizons",
+          "config_hashes"
+        ],
+        "title": "AlertLogOut"
+      },
+      "AlertLogRow": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "prior_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Stage"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "changed_fields": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Changed Fields"
+          },
+          "counted": {
+            "type": "boolean",
+            "title": "Counted"
+          },
+          "rescaled_history": {
+            "type": "boolean",
+            "title": "Rescaled History"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "outcomes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Outcome"
+            },
+            "type": "object",
+            "title": "Outcomes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "as_of",
+          "stage",
+          "prior_stage",
+          "product_id",
+          "product",
+          "company",
+          "ticker",
+          "trigger",
+          "config_hash",
+          "summary",
+          "changed_fields",
+          "counted",
+          "rescaled_history",
+          "decision",
+          "outcomes"
+        ],
+        "title": "AlertLogRow"
+      },
       "AlertRow": {
         "properties": {
           "id": {
@@ -1578,6 +2093,65 @@
         ],
         "title": "HistoryRow"
       },
+      "HorizonStats": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "hits": {
+            "type": "integer",
+            "title": "Hits"
+          },
+          "hit_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hit Rate"
+          },
+          "median_excess": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Excess"
+          },
+          "mean_excess": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Excess"
+          },
+          "judged": {
+            "type": "boolean",
+            "title": "Judged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "hits",
+          "hit_rate",
+          "median_excess",
+          "mean_excess",
+          "judged"
+        ],
+        "title": "HorizonStats"
+      },
       "JobOut": {
         "properties": {
           "ok": {
@@ -1613,6 +2187,181 @@
           "ok"
         ],
         "title": "JobOut"
+      },
+      "Outcome": {
+        "properties": {
+          "stock_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Return"
+          },
+          "benchmark_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Return"
+          },
+          "excess_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excess Return"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stock_return",
+          "benchmark_return",
+          "excess_return",
+          "complete"
+        ],
+        "title": "Outcome"
+      },
+      "PerformanceGroup": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "n_alerts": {
+            "type": "integer",
+            "title": "N Alerts"
+          },
+          "n_counted": {
+            "type": "integer",
+            "title": "N Counted"
+          },
+          "hit_rule": {
+            "type": "string",
+            "title": "Hit Rule"
+          },
+          "headline_horizon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline Horizon"
+          },
+          "first_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "First As Of"
+          },
+          "last_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Last As Of"
+          },
+          "horizons": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/HorizonStats"
+            },
+            "type": "object",
+            "title": "Horizons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "config_hash",
+          "trigger",
+          "n_alerts",
+          "n_counted",
+          "hit_rule",
+          "headline_horizon",
+          "first_as_of",
+          "last_as_of",
+          "horizons"
+        ],
+        "title": "PerformanceGroup"
+      },
+      "PerformanceOut": {
+        "properties": {
+          "horizons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Horizons"
+          },
+          "min_sample_to_judge": {
+            "type": "integer",
+            "title": "Min Sample To Judge"
+          },
+          "dedupe_days": {
+            "type": "integer",
+            "title": "Dedupe Days"
+          },
+          "combine_triggers": {
+            "type": "boolean",
+            "title": "Combine Triggers"
+          },
+          "current_config_hash": {
+            "type": "string",
+            "title": "Current Config Hash"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/PerformanceGroup"
+            },
+            "type": "array",
+            "title": "Groups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "horizons",
+          "min_sample_to_judge",
+          "dedupe_days",
+          "combine_triggers",
+          "current_config_hash",
+          "groups"
+        ],
+        "title": "PerformanceOut"
       },
       "PriceBadge": {
         "properties": {
@@ -1886,6 +2635,36 @@
           "active"
         ],
         "title": "ProductInfo"
+      },
+      "ReplayIn": {
+        "properties": {
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "title": "ReplayIn"
       },
       "RetailBadge": {
         "properties": {

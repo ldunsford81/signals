@@ -61,8 +61,21 @@ def scan(as_of: Optional[str] = typer.Option(None, "--as-of", help="Exchange dat
 
 @app.command()
 def daily(as_of: Optional[str] = typer.Option(None, "--as-of")) -> None:
-    """Backup, ingest, then scan. This is what cron runs."""
+    """Backup, ingest, scan, then evaluate. This is what cron runs."""
     _run(jobs.daily_job, as_of=_parse(as_of), trigger="schedule")
+
+
+@app.command()
+def replay(start: Optional[str] = typer.Option(None, "--start", help="First exchange date (default: earliest with enough history)"),
+           end: Optional[str] = typer.Option(None, "--end", help="Last exchange date (default: latest price data)")) -> None:
+    """Run the scan for every trading day in a range (alerts tagged trigger=replay)."""
+    _run(jobs.replay_job, start=_parse(start), end=_parse(end))
+
+
+@app.command()
+def evaluate() -> None:
+    """Fill alert_outcomes (5/20/60 trading days and through earnings) for every alert."""
+    _run(jobs.evaluate_job)
 
 
 @app.command()
