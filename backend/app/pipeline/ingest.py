@@ -193,7 +193,9 @@ def run_source(session: Session, settings: Settings, name: str, as_of: date, ful
     missing = [k for k in adapter.required_settings() if not os.environ.get(k)]
     if missing:
         return _record(session, name, cfg.mode, started, "skipped", 0,
-                       f"missing settings {', '.join(missing)} (add them to .env)", prev_good)
+                       f"{cfg.mode} mode needs {', '.join(missing)} in .env; no data fetched", prev_good)
+    if getattr(adapter, "implemented", True) is False:
+        return _record(session, name, cfg.mode, started, "skipped", 0, adapter.stub_message(), prev_good)
     entities = build_entities(session, settings, adapter, as_of)
     if not entities:
         return _record(session, name, cfg.mode, started, "skipped", 0, "no entities in scope", prev_good)

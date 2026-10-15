@@ -7,7 +7,7 @@ import pandas as pd
 
 from app.core import calendar
 
-from app.sources.base import Entity, FetchResult, Observation
+from app.sources.base import Entity, FetchResult, LiveStub, Observation
 from app.sources.demo import generators as gen
 from app.sources.demo.generators import World
 
@@ -40,3 +40,13 @@ class PriceDemo:
                 for m in self.metrics:
                     out.observations.append(Observation(e.entity_type, e.key, m, ts.date(), float(row[m])))
         return out
+
+
+class PriceLive(LiveStub):
+    """Daily bars vendor, seeded tickers and benchmarks only. Backfill 2 years so replay has history."""
+    name = "price"
+    family = "price"
+    entity_type = "company"
+    metrics = ["close", "volume"]
+    provider = "a daily-bars price vendor"
+    settings_keys = ["PRICE_VENDOR_API_KEY"]

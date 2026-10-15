@@ -75,11 +75,12 @@ ingest:
   overlap_days: 3            # re-fetch this many days before the last good date
   default_lookback_days: 14  # used when a source has no prior good run
 
+# Modes: demo (synthetic, default) | live (stub until built; needs its key in .env) | off.
 sources:
   search_interest:        {mode: demo, scope: watchlist, snapshot_window_days: 400}
   social_mentions:        {mode: demo, scope: watchlist}
   price:                  {mode: demo, scope: watchlist, benchmarks: [XLY, XRT, IJH]}
-  earnings:               {mode: demo}            # or csv: data/earnings.csv
+  earnings:               {mode: demo}            # demo | csv (reads data/earnings.csv; set csv: to change) | live | off
   ticker_search_interest: {mode: demo, scope: watchlist, snapshot_window_days: 400}
   cashtag_mentions:       {mode: demo, scope: watchlist, sample_scope: active_only, monthly_budget_usd: 25}
 

@@ -8,13 +8,13 @@ from typing import Callable
 
 from app.core.config import Settings, SourceCfg
 from app.sources.base import SourceAdapter
-from app.sources.cashtag_mentions import CashtagMentionsDemo
+from app.sources.cashtag_mentions import CashtagMentionsDemo, CashtagMentionsLive
 from app.sources.demo.state import world
-from app.sources.earnings import EarningsDemo
-from app.sources.price import PriceDemo
-from app.sources.search_interest import SearchInterestDemo
-from app.sources.social_mentions import SocialMentionsDemo
-from app.sources.ticker_search_interest import TickerSearchInterestDemo
+from app.sources.earnings import EarningsCsv, EarningsDemo, EarningsLive
+from app.sources.price import PriceDemo, PriceLive
+from app.sources.search_interest import SearchInterestDemo, SearchInterestLive
+from app.sources.social_mentions import SocialMentionsDemo, SocialMentionsLive
+from app.sources.ticker_search_interest import TickerSearchInterestDemo, TickerSearchInterestLive
 
 Factory = Callable[[Settings, SourceCfg], SourceAdapter]
 
@@ -23,13 +23,17 @@ def _demo(cls) -> Factory:
     return lambda settings, cfg: cls(world=world(settings), cfg=cfg)
 
 
+def _plain(cls) -> Factory:
+    return lambda settings, cfg: cls(cfg=cfg)
+
+
 REGISTRY: dict[str, dict[str, Factory]] = {
-    "search_interest": {"demo": _demo(SearchInterestDemo)},
-    "social_mentions": {"demo": _demo(SocialMentionsDemo)},
-    "price": {"demo": _demo(PriceDemo)},
-    "earnings": {"demo": _demo(EarningsDemo)},
-    "ticker_search_interest": {"demo": _demo(TickerSearchInterestDemo)},
-    "cashtag_mentions": {"demo": _demo(CashtagMentionsDemo)},
+    "search_interest": {"demo": _demo(SearchInterestDemo), "live": _plain(SearchInterestLive)},
+    "social_mentions": {"demo": _demo(SocialMentionsDemo), "live": _plain(SocialMentionsLive)},
+    "price": {"demo": _demo(PriceDemo), "live": _plain(PriceLive)},
+    "earnings": {"demo": _demo(EarningsDemo), "csv": _plain(EarningsCsv), "live": _plain(EarningsLive)},
+    "ticker_search_interest": {"demo": _demo(TickerSearchInterestDemo), "live": _plain(TickerSearchInterestLive)},
+    "cashtag_mentions": {"demo": _demo(CashtagMentionsDemo), "live": _plain(CashtagMentionsLive)},
 }
 
 # Fixed order: catalog first so earnings are current before anything reads them.

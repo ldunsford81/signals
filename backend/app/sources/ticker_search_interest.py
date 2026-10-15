@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.sources.base import Entity, FetchResult, Observation, SnapshotMeta
+from app.sources.base import Entity, FetchResult, LiveStub, Observation, SnapshotMeta
 from app.sources.demo import generators as gen
 from app.sources.demo.generators import World
 
@@ -28,3 +28,14 @@ class TickerSearchInterestDemo:
             for ts, v in gen.rescale_window(raw, start, end).items():
                 out.observations.append(Observation(e.entity_type, e.key, "interest_index", ts.date(), float(v)))
         return out
+
+
+class TickerSearchInterestLive(LiveStub):
+    """Search interest in "TICKER stock" from the same provider as search_interest (snapshots)."""
+    name = "ticker_search_interest"
+    family = "retail"
+    entity_type = "company"
+    metrics = ["interest_index"]
+    rescales_history = True
+    provider = "Google Trends via a third-party provider"
+    settings_keys = ["TRENDS_PROVIDER_API_KEY"]

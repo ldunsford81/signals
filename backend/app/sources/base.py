@@ -63,3 +63,33 @@ def date_to_value(d: date) -> float:
 
 def value_to_date(v: float) -> date:
     return date.fromordinal(int(round(v)))
+
+
+class LiveStub:
+    """Base for live adapters that are not built yet.
+
+    A stub declares the credentials it will need and the provider it targets, makes no network
+    calls, and is reported by the ingest runner as `skipped` with a readable message. To go live,
+    subclass it, set `implemented = True` and write `fetch()` against the provider.
+    """
+    name = ""
+    family = ""
+    entity_type = ""
+    metrics: list[str] = []
+    rescales_history = False
+    implemented = False
+    provider = ""
+    settings_keys: list[str] = []
+
+    def __init__(self, cfg=None, **_: object) -> None:
+        self.cfg = cfg
+
+    def required_settings(self) -> list[str]:
+        return list(self.settings_keys)
+
+    def stub_message(self) -> str:
+        return (f"live adapter not built yet ({self.provider}); "
+                f"implement fetch() in backend/app/sources/{self.name}.py")
+
+    def fetch(self, entities: list[Entity], start: date, end: date) -> FetchResult:
+        return FetchResult(warnings=[self.stub_message()])

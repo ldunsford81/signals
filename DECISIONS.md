@@ -294,3 +294,26 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   rebuilt (`socialarb seed --reset` creates `socialarb.db`), so nobody loses data on upgrade.
 - **Domain ≠ public.** The app still has no authentication and binds to 127.0.0.1. Putting it on
   socialarb.trade needs a login (or a private network) in front of it first.
+
+## Live stubs, earnings CSV, backup (step 12)
+
+- **Live stubs share one base** (`sources.base.LiveStub`): each declares its provider and the `.env`
+  keys it needs, documents the provider's constraints in its docstring, and makes no network calls.
+  The ingest runner records a stub as `skipped`, either "live mode needs X in .env; no data fetched"
+  (key missing) or "live adapter not built yet (provider); implement fetch() in …" (key present). A
+  stub never raises into the scan or the UI, and the last good data stays in use until it goes stale.
+- **Key names:** `TRENDS_PROVIDER_API_KEY` (search_interest and ticker_search_interest share one
+  provider), `YOUTUBE_API_KEY`, `PRICE_VENDOR_API_KEY`, `EARNINGS_CALENDAR_API_KEY`, `X_BEARER_TOKEN`.
+- **Earnings CSV** (`mode: csv`): one row per ticker per date known, with an optional `as_of` column for
+  point-in-time history (rows without it are stamped with the ingest date; rows dated after the ingest
+  date are ignored). Bad rows are reported by line and skipped; tickers without a row are listed; the
+  run is `partial` in either case. A missing file records the run as `error` and changes nothing.
+  `data/earnings.csv` is generated from the demo calendar at the seeded anchor, with FIVE's date
+  corrected, so switching to CSV mode keeps the demo scenarios and fixes scenario 11.
+- **Replay and the catalog fallback.** When a company has no earnings observation on or before a
+  replayed day (possible in CSV mode with no `as_of` history), the scan falls back to the catalog row,
+  which holds today's date: a look-ahead. Demo mode always has history, so this only matters once real
+  CSV data is used; add `as_of` rows to avoid it.
+- **Backup** (`socialarb backup`, run first by `socialarb daily`) uses SQLite's online backup API, so it
+  is safe while the API is running.
+- **The done-when checklist** in the README maps each item to the screen or command that shows it.
