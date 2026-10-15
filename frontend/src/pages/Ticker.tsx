@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { feedApi, viewApi, type ReviewIn, type TickerOut } from "../api/client";
+import { isAdmin, useUser } from "../components/Auth";
 import { C, pct, toT } from "../components/chartTheme";
 import { Icon, ICONS, SignalPill, STAGE_LABEL } from "../components/Signal";
 import { TimeChart, type Marker } from "../components/TimeChart";
@@ -101,7 +102,7 @@ export function Ticker() {
       </header>
 
       {!sig ? (
-        <p className="muted">This product hasn't been scanned yet. Run daily from the Dashboard.</p>
+        <p className="muted">This product hasn't been scanned yet. It appears after the next daily run.</p>
       ) : (
         <TickerBody data={data} days={days} setDays={setDays} open={open} setOpen={setOpen} setProduct={(id) => setParams({ product: String(id) })} />
       )}
@@ -127,6 +128,7 @@ function TickerBody({
   const sig = data.signal!;
   const t = data.tiles as any;
   const e = data.earnings as any;
+  const admin = isAdmin(useUser());
   const ch = data.chart!;
   const co = data.company;
   const asOf = toT(String(data.scan!.as_of));
@@ -269,9 +271,11 @@ function TickerBody({
                   <b>Needs a date</b>
                 </span>
                 <span className="small muted">{e.reason}</span>
-                <Link to="/settings#companies" className="small">
-                  Update it in Data &amp; settings
-                </Link>
+                {admin && (
+                  <Link to="/settings#companies" className="small">
+                    Update it in Data &amp; settings
+                  </Link>
+                )}
               </>
             ) : (
               <>

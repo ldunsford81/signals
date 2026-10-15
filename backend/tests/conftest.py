@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 
@@ -44,3 +44,19 @@ def seeded_db(tmp_path_factory):
     yield {"settings": s, "scan": result, "root": root}
     get_engine.cache_clear()
     mp.undo()
+
+
+@pytest.fixture(autouse=True)
+def signed_in_admin(request):
+    """API tests run as a signed-in admin, except those marked `real_auth`, which use real logins."""
+    from app.api.deps import require_admin, require_user
+    from app.main import app
+    if request.node.get_closest_marker("real_auth"):
+        yield
+        return
+    fake = SimpleNamespace(id=None, email="test@example.com", name="Test", role="admin", active=True)
+    app.dependency_overrides[require_user] = lambda: fake
+    app.dependency_overrides[require_admin] = lambda: fake
+    yield
+    app.dependency_overrides.pop(require_user, None)
+    app.dependency_overrides.pop(require_admin, None)

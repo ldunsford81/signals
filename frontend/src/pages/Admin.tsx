@@ -4,15 +4,18 @@ import { Link } from "react-router-dom";
 import {
   adminApi,
   api,
+  authApi,
   type AnnouncementAdminOut,
   type AnnouncementIn,
   type CompanyIn,
   type CompanyOut,
   type ImportOut,
   type JobOut,
+  type NewInviteOut,
   type ProductIn,
   type ProductOut,
 } from "../api/client";
+import { useUser } from "../components/Auth";
 import { Badge, Tag } from "../components/Badge";
 
 const ANN_TYPES = ["new_product", "partnership", "distribution", "negative_event", "other"] as const;
@@ -669,6 +672,178 @@ function ImportPanel() {
   );
 }
 
+// ---- team ------------------------------------------------------------------------------------------------
+const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" }) : "never");
+
+function UsersTable() {
+  const me = useUser();
+  const qc = useQueryClient();
+  const { data: users, error } = useQuery({ queryKey: ["auth-users"], queryFn: authApi.users });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["auth-users"] });
+  const patch = useMutation({ mutationFn: (v: { id: number; role?: "member" | "admin"; active?: boolean }) => authApi.patchUser(v.id, v), onSuccess: refresh });
+  const [temp, setTemp] = useState<{ email: string; temporary_password: string } | null>(null);
+  const reset = useMutation({ mutationFn: authApi.resetPassword, onSuccess: setTemp });
+  if (error) return <ErrorText error={error} />;
+  if (!users) return <p className="muted">Loading…</p>;
+  return (
+    <>
+      {temp && (
+        <div className="secret-box" role="status">
+          <span>
+            Temporary password for <b>{temp.email}</b>. Share it privately; it is shown only once. They can change it under Account.
+          </span>
+          <code className="secret">{temp.temporary_password}</code>
+          <button className="link" onClick={() => setTemp(null)}>Done</button>
+        </div>
+      )}
+      <div className="table-wrap">
+        <table className="grid compact">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last sign-in</th><th /></tr>
+          </thead>
+          <tbody>
+            {users.map((u) => {
+              const self = u.id === me.id;
+              return (
+                <tr key={u.id}>
+                  <td>{u.name}{self && <Tag>you</Tag>}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <select
+                      aria-label={`Role for ${u.email}`}
+                      value={u.role}
+                      disabled={patch.isPending}
+                      onChange={(e) => patch.mutate({ id: u.id, role: e.target.value as "member" | "admin" })}
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td>{u.active ? <span className="ok">Active</span> : <span className="muted">Deactivated</span>}</td>
+                  <td className="muted">{when(u.last_login_at)}</td>
+                  <td className="actions">
+                    {!self && (
+                      <>
+                        <button className="link" disabled={reset.isPending} onClick={() => confirm(`Reset the password for ${u.email}? Their current password stops working and they are signed out.`) && reset.mutate(u.id)}>
+                          Reset password
+                        </button>
+                        <button className={`link ${u.active ? "danger" : ""}`} style={{ marginLeft: 10 }} disabled={patch.isPending} onClick={() => patch.mutate({ id: u.id, active: !u.active })}>
+                          {u.active ? "Deactivate" : "Reactivate"}
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <ErrorText error={patch.error ?? reset.error} />
+    </>
+  );
+}
+
+function InvitesBlock() {
+  const qc = useQueryClient();
+  const { data: invites, error } = useQuery({ queryKey: ["auth-invites"], queryFn: authApi.invites });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["auth-invites"] });
+  const [form, setForm] = useState({ email: "", role: "member" as "member" | "admin", days: "7" });
+  const [made, setMade] = useState<NewInviteOut | null>(null);
+  const create = useMutation({
+    mutationFn: () => authApi.createInvite({ email: orNull(form.email), role: form.role, days: Number(form.days) || 7 }),
+    onSuccess: (inv) => {
+      setMade(inv);
+      setForm({ email: "", role: "member", days: "7" });
+      refresh();
+    },
+  });
+  const revoke = useMutation({ mutationFn: authApi.revokeInvite, onSuccess: refresh });
+  const link = made ? `${window.location.origin}/signup?invite=${encodeURIComponent(made.code)}` : "";
+  const [copied, setCopied] = useState(false);
+  const copy = () => navigator.clipboard?.writeText(link).then(() => setCopied(true), () => setCopied(false));
+  return (
+    <>
+      <form
+        className="job-row"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setCopied(false);
+          create.mutate();
+        }}
+      >
+        <input type="email" placeholder="Email (optional, locks the invite to it)" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={{ padding: "8px 10px", minWidth: 280 }} aria-label="Invite email" />
+        <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as "member" | "admin" })} style={{ padding: "8px 10px" }} aria-label="Invite role">
+          <option value="member">Member</option>
+          <option value="admin">Admin</option>
+        </select>
+        <select value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} style={{ padding: "8px 10px" }} aria-label="Invite expiry">
+          <option value="1">Expires in 1 day</option>
+          <option value="7">Expires in 7 days</option>
+          <option value="30">Expires in 30 days</option>
+        </select>
+        <button className="btn primary-btn" disabled={create.isPending}>{create.isPending ? "Creating…" : "Create invite"}</button>
+        <ErrorText error={create.error} />
+      </form>
+      {made && (
+        <div className="secret-box" role="status">
+          <span>
+            Invite created{made.email ? ` for ${made.email}` : ""}. Send this link; the code is shown only once.
+          </span>
+          <code className="secret">{link}</code>
+          <span>
+            <button className="link" type="button" onClick={copy}>{copied ? "Copied" : "Copy link"}</button>
+            <button className="link" type="button" style={{ marginLeft: 14 }} onClick={() => setMade(null)}>Done</button>
+          </span>
+        </div>
+      )}
+      {error && <ErrorText error={error} />}
+      {invites && invites.length > 0 && (
+        <div className="table-wrap" style={{ marginTop: 12 }}>
+          <table className="grid compact">
+            <thead>
+              <tr><th>Code</th><th>For</th><th>Role</th><th>Status</th><th>Expires</th><th /></tr>
+            </thead>
+            <tbody>
+              {invites.map((i) => (
+                <tr key={i.id}>
+                  <td className="mono">{i.hint}</td>
+                  <td>{i.email ?? <span className="muted">anyone</span>}</td>
+                  <td>{i.role === "admin" ? "Admin" : "Member"}</td>
+                  <td>
+                    <span className={`run-status ${i.status === "open" ? "rs-ok" : i.status === "used" ? "" : "rs-skipped"}`}>{i.status}</span>
+                    {i.used_by_email && <span className="sub">{i.used_by_email}</span>}
+                  </td>
+                  <td className="muted">{when(i.expires_at)}</td>
+                  <td className="actions">
+                    {i.status === "open" && (
+                      <button className="link danger" disabled={revoke.isPending} onClick={() => revoke.mutate(i.id)}>Revoke</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+
+function TeamPanel() {
+  return (
+    <section className="admin-block" id="team">
+      <h2>Team</h2>
+      <p className="note" style={{ margin: "0 0 10px" }}>
+        Admins run jobs, edit the catalog and manage the team. Members view signals and record their own decisions.
+      </p>
+      <UsersTable />
+      <h3 style={{ fontSize: 14, margin: "20px 0 8px" }}>Invites</h3>
+      <InvitesBlock />
+    </section>
+  );
+}
+
 // ---- page ----------------------------------------------------------------------------------------------
 export function Admin() {
   const { data: companies } = useQuery({ queryKey: ["admin-companies"], queryFn: adminApi.companies });
@@ -677,7 +852,7 @@ export function Admin() {
     <section className="admin">
       <header className="page-head" style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span className="eyebrow">Jobs, feeds, catalog and imports</span>
+          <span className="eyebrow">Jobs, feeds, catalog, imports and team</span>
           <h1>Data &amp; settings</h1>
         </div>
       </header>
@@ -704,6 +879,7 @@ export function Admin() {
         </>
       )}
       <ImportPanel />
+      <TeamPanel />
     </section>
   );
 }

@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 import { evalApi, type AlertLogRow, type AlertQuery, type PerformanceGroup } from "../api/client";
+import { isAdmin, useUser } from "../components/Auth";
 import { Badge, Tag } from "../components/Badge";
 import { SignalPill, signalColor, STAGE_LABEL } from "../components/Signal";
 
@@ -25,6 +26,7 @@ function PerformanceTable() {
     placeholderData: keepPreviousData,
   });
   const evaluate = useMutation({ mutationFn: evalApi.evaluate, onSettled: () => qc.invalidateQueries() });
+  const admin = isAdmin(useUser());
   if (!data) return <p>Loading…</p>;
   const hs = data.horizons;
 
@@ -44,7 +46,7 @@ function PerformanceTable() {
       </div>
       {data.groups.length === 0 ? (
         <div className="empty-card">
-          No signals scored yet. Run <code>socialarb replay</code> then <code>socialarb evaluate</code> (or the buttons in Data &amp; settings) to score
+          No signals scored yet. Run <code>socialarb replay</code> then <code>socialarb evaluate</code> (an admin can also use the buttons in Data &amp; settings) to score
           the rules on the seeded history.
         </div>
       ) : (
@@ -70,9 +72,11 @@ function PerformanceTable() {
           <input type="checkbox" checked={combine} onChange={(e) => setCombine(e.target.checked)} />
           Combine replay and live signals
         </label>
-        <button className="seg" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
-          {evaluate.isPending ? "Evaluating…" : "Re-run evaluate"}
-        </button>
+        {admin && (
+          <button className="seg" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
+            {evaluate.isPending ? "Evaluating…" : "Re-run evaluate"}
+          </button>
+        )}
         <span className="muted small">
           Close to close after the signal date. The first signal per company per stage within {data.dedupe_days} days counts once. Fewer
           than {data.min_sample_to_judge} finished signals: too few to judge.

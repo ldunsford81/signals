@@ -6,7 +6,7 @@ SocialArb watches consumer products for a gap between **product buzz** (search a
 the **stock's price** (versus a benchmark) and **retail chatter** about the ticker. The idea under test:
 buzz about a product shows up before the stock moves and before retail traders start talking about it.
 
-It is a review tool for one person, not a trading bot. Each morning it shows:
+It is a review tool for a small team, not a trading bot. Each morning it shows:
 
 - **Entry signals** (buy-side): buzz is up, the price hasn't moved yet, chatter is quiet, and earnings
   are 6–14 weeks out.
@@ -67,6 +67,35 @@ socialarb serve
 In a second PowerShell window: `cd frontend`, `npm install`, `npm run dev`, then open
 http://127.0.0.1:5173.
 
+## Accounts
+
+Every screen needs a signed-in account. The **first person to open the app creates the owner account**
+(an admin). After that, sign-up is invite-only:
+
+1. An admin opens **Data & settings → Team → Invites**, optionally types the person's email (the invite
+   then only works for that address), picks Member or Admin and an expiry, and presses **Create invite**.
+2. The admin sends the link that appears (`…/signup?invite=XXXXX-XXXXX-XXXXX`). It is shown once.
+3. The person opens the link, enters a name, email and password, and is signed in.
+
+| Role | Can |
+| --- | --- |
+| **Admin** | Everything: run jobs, edit the catalog and earnings dates, import CSVs, manage users and invites. |
+| **Member** | View the dashboard, tickers and performance, and record their own decisions. |
+
+There is no email server, so a forgotten password is reset by an admin (**Team → Reset password** shows
+a one-time temporary password) or from the command line. Everyone can change their own password under
+**Account** (click your name at the bottom of the sidebar); doing so signs out their other browsers.
+
+```bash
+socialarb user create you@example.com --name "Your Name" --admin   # prompts for a password
+socialarb user reset-password you@example.com                       # prints a temporary password
+socialarb user list
+socialarb user invite --email friend@example.com [--admin] [--days 7]
+```
+
+`SOCIALARB_SIGNUP` in `.env` changes the sign-up rule once an owner exists: `invite` (default), `open`
+(anyone can sign up as a member) or `closed` (accounts are only made by admins or the CLI).
+
 ## Day to day
 
 Two terminals:
@@ -76,12 +105,13 @@ cd backend && source .venv/bin/activate && socialarb serve
 cd frontend && npm run dev
 ```
 
-Press **Run daily** on the Dashboard (or let the schedule below do it). It backs up the database,
+Open http://127.0.0.1:5173 and sign in (the first visit asks you to create the owner account). As an
+admin, press **Run daily** on the Dashboard (or let the schedule below do it). It backs up the database,
 ingests every source, scans and scores. `socialarb seed --reset` rebuilds the demo around today's date;
 it also deletes your saved decisions.
 
 **Updating from an earlier version:** `git pull`, then `pip install -e ".[dev]"` in `backend/` if the
-command list changed. Before the rename the command was `ctm`; it still works as an alias.
+command list changed. The database is upgraded in place when the server starts (or run `socialarb seed`). Before the rename the command was `ctm`; it still works as an alias.
 
 ## The screens
 
@@ -97,8 +127,10 @@ command list changed. Before the rename the command was `ctm`; it still works as
 - **Performance**: how each kind of signal performed (hit rate, median and mean return versus the
   benchmark at 5, 20 and 60 trading days or through earnings), split by config version and by live
   versus replayed history, plus the full signal log with each signal's input snapshot.
-- **Data & settings**: run any job, see each source's last run and errors, add or edit companies,
-  products and announcements, fix earnings dates, and import companies or products from CSV.
+- **Data & settings** (admins): run any job, see each source's last run and errors, add or edit
+  companies, products and announcements, fix earnings dates, import companies or products from CSV,
+  and manage the team (roles, deactivation, password resets, invites).
+- **Account**: your profile and a change-password form.
 
 ## Commands
 
@@ -112,6 +144,7 @@ command list changed. Before the rename the command was `ctm`; it still works as
 | `socialarb evaluate` | `POST /api/evaluate` | Fill forward returns for every alert; unfinished horizons hold the return so far. |
 | `socialarb backup` | n/a | Copy the SQLite database to `backups/socialarb-<timestamp>.db`. |
 | `socialarb serve` | n/a | Start the API on 127.0.0.1:8000. |
+| `socialarb user create\|reset-password\|list\|invite` | n/a | Manage accounts from the command line (see Accounts). |
 | `socialarb openapi` | n/a | Write `frontend/openapi.json`; `npm run gen:api` regenerates the frontend's typed client. |
 
 ## The demo
@@ -213,9 +246,21 @@ How to see each item from the build prompt, with no API keys:
 
 ## Security
 
-There is no login, so the API only listens on `127.0.0.1`. To use it from another machine, put it
-behind a private network such as Tailscale. Serving it publicly at socialarb.trade needs a login in front
-of it first.
+- **Accounts:** passwords are hashed with scrypt (per-user salt). Sessions are random 256-bit tokens in
+  an `HttpOnly`, `SameSite=Lax` cookie (marked `Secure` when served over HTTPS); only a SHA-256 of
+  each token is stored, so a copied database can't be used to sign in. Sessions last 14 days.
+- **Every API route except `/api/health` and `/api/auth/status|login|signup` needs a session.** Jobs,
+  catalog edits, imports and team management also need the admin role (checked on the server, not
+  just hidden in the UI).
+- **Cross-site requests:** every write must be JSON or carry the `X-Requested-With` header the app
+  sends, which a form on another site can't do.
+- **Guessing:** 8 failed sign-ins per email per client in 15 minutes, and 30 per email from anywhere,
+  get a "too many attempts" error. Error messages don't say whether an email has an account. Invite
+  codes are single use, expire, and are stored hashed.
+- **Behind Cloudflare** set `SOCIALARB_BEHIND_CLOUDFLARE=1` so the rate limit sees each visitor's IP
+  (from `CF-Connecting-IP`); leave it unset otherwise, because anyone can send that header.
+- The API still listens on `127.0.0.1` by default. Put a TLS-terminating proxy or tunnel in front of it
+  to serve socialarb.trade.
 
 ## Tests
 

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.routes import get_session
+from app.api.deps import get_session
 from app.core.config import load_settings
 from app.pipeline import admin
 from app.pipeline.admin import AdminError

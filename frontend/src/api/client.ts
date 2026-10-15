@@ -15,17 +15,29 @@ export interface WatchlistQuery {
   earnings_window: boolean;
 }
 
-async function request<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: string, params?: Record<string, unknown>, body?: unknown): Promise<T> {
+/** Thrown when the session is missing or expired; the auth gate listens for it and shows sign-in. */
+export class AuthRequired extends Error {}
+export const UNAUTHORIZED_EVENT = "socialarb:unauthorized";
+
+async function request<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: string, params?: Record<string, unknown>, body?: unknown): Promise<T> {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params ?? {})) {
     if (v !== undefined && v !== null && v !== "") qs.append(k, String(v));
   }
   const url = qs.toString() ? `${path}?${qs}` : path;
+  // The header marks requests as coming from our own pages (the API rejects cross-site writes without it).
+  const headers: Record<string, string> = { "X-Requested-With": "SocialArb" };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
   const res = await fetch(url, {
     method,
-    headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+    headers,
+    credentials: "same-origin",
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+  if (res.status === 401 && !path.startsWith("/api/auth/login") && !path.startsWith("/api/auth/signup")) {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    throw new AuthRequired("Sign in to continue.");
+  }
   if (!res.ok) {
     const text = await res.text();
     let detail = text;
@@ -122,4 +134,27 @@ export const viewApi = {
   dashboard: () => request<DashboardOut>("GET", "/api/dashboard"),
   ticker: (ticker: string, productId: number | null, days: number) =>
     request<TickerOut>("GET", `/api/tickers/${encodeURIComponent(ticker)}`, { product_id: productId ?? undefined, days }),
+};
+
+export type AuthStatus = S["AuthStatus"];
+export type UserOut = S["UserOut"];
+export type InviteOut = S["InviteOut"];
+export type NewInviteOut = S["NewInviteOut"];
+
+export const authApi = {
+  status: () => request<AuthStatus>("GET", "/api/auth/status"),
+  me: () => request<UserOut>("GET", "/api/auth/me"),
+  login: (email: string, password: string) => request<UserOut>("POST", "/api/auth/login", undefined, { email, password }),
+  signup: (b: { email: string; name: string; password: string; invite_code?: string | null }) =>
+    request<UserOut>("POST", "/api/auth/signup", undefined, b),
+  logout: () => request<{ ok: boolean }>("POST", "/api/auth/logout", undefined, {}),
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ ok: boolean }>("POST", "/api/auth/password", undefined, { current_password, new_password }),
+  users: () => request<UserOut[]>("GET", "/api/auth/users"),
+  patchUser: (id: number, b: { role?: "member" | "admin"; active?: boolean }) => request<UserOut>("PATCH", `/api/auth/users/${id}`, undefined, b),
+  resetPassword: (id: number) => request<S["TempPasswordOut"]>("POST", `/api/auth/users/${id}/reset-password`, undefined, {}),
+  invites: () => request<InviteOut[]>("GET", "/api/auth/invites"),
+  createInvite: (b: { email?: string | null; role: "member" | "admin"; days: number }) =>
+    request<NewInviteOut>("POST", "/api/auth/invites", undefined, b),
+  revokeInvite: (id: number) => request<{ ok: boolean }>("DELETE", `/api/auth/invites/${id}`),
 };

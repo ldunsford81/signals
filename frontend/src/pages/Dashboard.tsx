@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, viewApi, type TickerRow } from "../api/client";
+import { isAdmin, useUser } from "../components/Auth";
 import { pct } from "../components/chartTheme";
 import { ChatterDots, DualSpark, Icon, ICONS, MiniSpark, SectionHead, SignalPill, signalColor } from "../components/Signal";
 
@@ -91,6 +92,7 @@ export function Dashboard() {
   const [showQuiet, setShowQuiet] = useState(false);
   const [q, setQ] = useState("");
   const daily = useMutation({ mutationFn: api.daily, onSettled: () => qc.invalidateQueries() });
+  const admin = isAdmin(useUser());
 
   if (isLoading) return <p className="muted">Loading today's read…</p>;
   if (error) return <p className="error">Can't reach the API: {String(error)}</p>;
@@ -99,10 +101,16 @@ export function Dashboard() {
     return (
       <section className="surface headline">
         <h1 style={{ margin: 0 }}>No scan yet</h1>
-        <p>Seed the demo and run a scan (see the README), or press Run daily.</p>
-        <button className="btn primary-btn" onClick={() => daily.mutate()} disabled={daily.isPending}>
-          {daily.isPending ? "Running…" : "Run daily"}
-        </button>
+        {admin ? (
+          <>
+            <p>Seed the demo and run a scan (see the README), or press Run daily.</p>
+            <button className="btn primary-btn" onClick={() => daily.mutate()} disabled={daily.isPending}>
+              {daily.isPending ? "Running…" : "Run daily"}
+            </button>
+          </>
+        ) : (
+          <p>Nothing has been scanned yet. An admin needs to run the daily job.</p>
+        )}
       </section>
     );
   }
@@ -138,20 +146,27 @@ export function Dashboard() {
             </label>
             <input id="dash-search" type="search" placeholder="Search ticker or product" value={q} onChange={(e) => setQ(e.target.value)} />
           </form>
-          {issues > 0 ? (
+          {issues > 0 && admin ? (
             <Link to="/settings#sources" className="btn warn" title={data.health.issues.map((i) => `${i.source}: ${i.message}`).join("\n")}>
               <span className="dot" style={{ background: "#d7b46a" }} />
               {issues} feed{issues > 1 ? "s" : ""} need a look
             </Link>
+          ) : issues > 0 ? (
+            <span className="btn warn" style={{ cursor: "default" }} title={data.health.issues.map((i) => `${i.source}: ${i.message}`).join("\n")}>
+              <span className="dot" style={{ background: "#d7b46a" }} />
+              {issues} feed{issues > 1 ? "s" : ""} need a look
+            </span>
           ) : (
             <span className="btn" style={{ cursor: "default" }}>
               <span className="dot" style={{ background: "#199e70" }} />
               All feeds healthy
             </span>
           )}
-          <button className="btn primary-btn" onClick={() => daily.mutate()} disabled={daily.isPending}>
-            {daily.isPending ? "Running…" : "Run daily"}
-          </button>
+          {admin && (
+            <button className="btn primary-btn" onClick={() => daily.mutate()} disabled={daily.isPending}>
+              {daily.isPending ? "Running…" : "Run daily"}
+            </button>
+          )}
         </div>
       </header>
       {daily.data && !daily.data.ok && <div className="banner error">Run daily failed: {daily.data.error}</div>}
@@ -220,7 +235,7 @@ export function Dashboard() {
             <div className="radar">
               <h3>Also on the radar</h3>
               {data.radar.map((r) => (
-                <Link key={`${r.ticker}-${r.kind}`} to={r.kind === "earnings" ? "/settings#companies" : tickerHref(r)}>
+                <Link key={`${r.ticker}-${r.kind}`} to={r.kind === "earnings" && admin ? "/settings#companies" : tickerHref(r)}>
                   <span className="mono" style={{ fontWeight: 600 }}>
                     {r.ticker}
                   </span>

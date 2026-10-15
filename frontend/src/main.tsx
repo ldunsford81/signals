@@ -3,9 +3,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { productApi } from "./api/client";
+import { AdminOnly, RequireAuth } from "./components/Auth";
 import { Layout } from "./components/Layout";
+import { Account } from "./pages/Account";
 import { Admin } from "./pages/Admin";
 import { Alerts } from "./pages/Alerts";
+import { Login, Signup } from "./pages/AuthPages";
 import { Dashboard } from "./pages/Dashboard";
 import { Ticker } from "./pages/Ticker";
 import { Watchlist } from "./pages/Watchlist";
@@ -27,12 +30,28 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route element={<Layout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }
+          >
             <Route path="/" element={<Dashboard />} />
             <Route path="/tickers" element={<Watchlist />} />
             <Route path="/tickers/:ticker" element={<Ticker />} />
             <Route path="/performance" element={<Alerts />} />
-            <Route path="/settings" element={<Admin />} />
+            <Route
+              path="/settings"
+              element={
+                <AdminOnly>
+                  <Admin />
+                </AdminOnly>
+              }
+            />
+            <Route path="/account" element={<Account />} />
             <Route path="/products/:id" element={<ProductRedirect />} />
             <Route path="/feed" element={<Navigate replace to="/" />} />
             <Route path="/alerts" element={<Navigate replace to="/performance" />} />

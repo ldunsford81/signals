@@ -143,13 +143,14 @@ def build_feed(session: Session, settings: Settings, scan_id: int | None = None)
             "health": health, "counts": counts}
 
 
-def record_review(session: Session, alert_id: int, decision: str, note: str | None) -> AlertReview:
+def record_review(session: Session, alert_id: int, decision: str, note: str | None,
+                  user_id: int | None = None) -> AlertReview:
     """Append a review row. Reviews are a log: the latest row is the current decision; alerts are untouched."""
     if decision not in DECISIONS:
         raise FeedError(f"decision must be one of {', '.join(DECISIONS)}")
     if session.get(Alert, alert_id) is None:
         raise FeedError(f"alert {alert_id} not found")
-    r = AlertReview(alert_id=alert_id, decision=decision, note=(note or "").strip() or None)
+    r = AlertReview(alert_id=alert_id, decision=decision, note=(note or "").strip() or None, user_id=user_id)
     session.add(r)
     session.commit()
     return r

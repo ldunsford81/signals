@@ -4,9 +4,11 @@ from __future__ import annotations
 import re
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from app.api.admin_routes import router as admin_router
+from app.api.auth_routes import router as auth_router
+from app.api.deps import require_admin, require_user
 from app.api.routes import router
 from app.core.config import ConfigError, load_settings
 from app.core.logging import get_logger, setup_logging
@@ -59,8 +61,9 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="SocialArb API", version="0.1.0", lifespan=lifespan,
               description="SocialArb (socialarb.trade): product buzz, price response and retail chatter, kept separate.")
-app.include_router(router)
-app.include_router(admin_router)
+app.include_router(auth_router)
+app.include_router(router, dependencies=[Depends(require_user)])
+app.include_router(admin_router, dependencies=[Depends(require_admin)])
 
 
 @app.get("/api/health")

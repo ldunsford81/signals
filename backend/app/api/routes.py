@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Iterator
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -30,10 +29,10 @@ from app.api.schemas import (
     WatchlistOut,
     WatchlistRow,
 )
+from app.api.deps import get_session, require_admin, require_user
 from app.core import calendar
 from app.core.config import ConfigError, Settings, load_settings
-from app.db.models import Company, Product, Scan, SignalState, SourceRun
-from app.db.session import session_factory
+from app.db.models import Company, Product, Scan, SignalState, SourceRun, User
 from app.pipeline import jobs
 from app.pipeline.dashboard import dashboard, ticker_view
 from app.pipeline.detail import NotFound, product_detail
@@ -44,12 +43,6 @@ from app.sources.demo.state import stored_anchor
 router = APIRouter(prefix="/api")
 
 
-def get_session() -> Iterator[Session]:
-    s = session_factory()()
-    try:
-        yield s
-    finally:
-        s.close()
 
 
 def latest_scan(session: Session, include_replay: bool = False) -> Scan | None:
@@ -213,10 +206,11 @@ def alert(alert_id: int, session: Session = Depends(get_session)) -> AlertDetail
 
 
 @router.post("/alerts/{alert_id}/review", response_model=ReviewOut)
-def review(alert_id: int, body: ReviewIn, session: Session = Depends(get_session)) -> ReviewOut:
+def review(alert_id: int, body: ReviewIn, session: Session = Depends(get_session),
+           user: User = Depends(require_user)) -> ReviewOut:
     """The only write the review screens make: append a row to alert_reviews. Alerts are never changed."""
     try:
-        r = record_review(session, alert_id, body.decision, body.note)
+        r = record_review(session, alert_id, body.decision, body.note, user_id=getattr(user, "id", None))
     except FeedError as e:
         raise HTTPException(status_code=404 if "not found" in str(e) else 422, detail=str(e))
     return ReviewOut.model_validate(r, from_attributes=True)
@@ -236,31 +230,31 @@ def _job(fn, *a, **kw) -> JobOut:
         return JobOut(ok=False, error=f"{type(e).__name__}: {e}")
 
 
-@router.post("/ingest", response_model=JobOut)
+@router.post("/ingest", response_model=JobOut, dependencies=[Depends(require_admin)])
 def ingest(req: RunRequest | None = None) -> JobOut:
     req = req or RunRequest()
     return _job(jobs.ingest_job, as_of=req.as_of, sources=req.sources)
 
 
-@router.post("/scan", response_model=JobOut)
+@router.post("/scan", response_model=JobOut, dependencies=[Depends(require_admin)])
 def scan(req: RunRequest | None = None) -> JobOut:
     req = req or RunRequest()
     return _job(jobs.scan_job, as_of=req.as_of, trigger="manual")
 
 
-@router.post("/daily", response_model=JobOut)
+@router.post("/daily", response_model=JobOut, dependencies=[Depends(require_admin)])
 def daily(req: RunRequest | None = None) -> JobOut:
     req = req or RunRequest()
     return _job(jobs.daily_job, as_of=req.as_of, trigger="manual")
 
 
-@router.post("/replay", response_model=JobOut)
+@router.post("/replay", response_model=JobOut, dependencies=[Depends(require_admin)])
 def replay(req: ReplayIn | None = None) -> JobOut:
     """Runs synchronously (about a minute for the full demo history)."""
     req = req or ReplayIn()
     return _job(jobs.replay_job, start=req.start, end=req.end)
 
 
-@router.post("/evaluate", response_model=JobOut)
+@router.post("/evaluate", response_model=JobOut, dependencies=[Depends(require_admin)])
 def evaluate() -> JobOut:
     return _job(jobs.evaluate_job)

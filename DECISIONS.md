@@ -292,8 +292,8 @@ Simple, reasonable choices made while building, recorded so they can be revisite
 - **Files:** new installs use `data/socialarb.db`, `data/logs/socialarb.log` and
   `backups/socialarb-<timestamp>.db`. An existing `data/ctm.db` keeps being used until the database is
   rebuilt (`socialarb seed --reset` creates `socialarb.db`), so nobody loses data on upgrade.
-- **Domain ≠ public.** The app still has no authentication and binds to 127.0.0.1. Putting it on
-  socialarb.trade needs a login (or a private network) in front of it first.
+- **Domain ≠ public.** The app binds to 127.0.0.1. Serving socialarb.trade needs a TLS proxy or tunnel
+  in front of it (accounts were added next; see below).
 
 ## Live stubs, earnings CSV, backup (step 12)
 
@@ -317,3 +317,33 @@ Simple, reasonable choices made while building, recorded so they can be revisite
 - **Backup** (`socialarb backup`, run first by `socialarb daily`) uses SQLite's online backup API, so it
   is safe while the API is running.
 - **The done-when checklist** in the README maps each item to the screen or command that shows it.
+
+## Accounts: sign-in and invite-only sign-up
+
+The build prompt listed authentication as out of scope for a single-user local tool. It was added at the
+owner's request ahead of putting the app on socialarb.trade.
+
+- **Owner bootstrap, then invites.** The first sign-up becomes an admin; after that a sign-up needs an
+  invite code (`SOCIALARB_SIGNUP=invite`, the default). `open` lets anyone join as a member, `closed`
+  turns sign-up off. No email server: invites are links an admin sends, and password resets are a
+  one-time temporary password from an admin or `socialarb user reset-password`.
+- **Two roles.** Admins run jobs, edit the catalog, import CSVs and manage the team. Members view
+  everything and record decisions. Roles are enforced on the server with router-level dependencies;
+  the UI only hides what a member can't use. The last active admin can't be demoted or deactivated.
+- **Decisions are per person.** `alert_reviews.user_id` records who made each decision (null for
+  decisions made before accounts existed). The ticker page still shows the latest decision.
+- **Server-side sessions over JWTs.** A random token in an `HttpOnly`, `SameSite=Lax` cookie; the
+  database keeps only its SHA-256, so sessions can be revoked (sign out, password change, deactivate)
+  and a leaked database can't sign anyone in. 14-day lifetime; `last_seen_at` is written at most every
+  5 minutes.
+- **scrypt from the standard library** (`hashlib.scrypt`, N=2^14, r=8, p=1, 16-byte salt), stored as
+  `scrypt$N$r$p$salt$hash` so parameters can be raised later without breaking old hashes. Passwords
+  need 10+ characters, at least 4 distinct, and can't equal the email.
+- **CSRF:** cookies are `SameSite=Lax`, and every unsafe request must be JSON or carry
+  `X-Requested-With`, which a cross-site form can't send.
+- **Rate limiting is in memory** (per process): 8 failures per email per client and 30 per email in
+  15 minutes. Enough for one server process; a multi-process deployment would need a shared store.
+  `CF-Connecting-IP` is only trusted when `SOCIALARB_BEHIND_CLOUDFLARE` is set.
+- **Tests** run with a signed-in admin injected by default; `tests/test_auth.py` is marked `real_auth`
+  and exercises the real cookies, roles, invites, rate limits and CSRF check.
+

@@ -86,7 +86,7 @@ def backup() -> None:
 
 @app.command()
 def serve(host: str = "127.0.0.1", port: int = 8000, reload: bool = False) -> None:
-    """Start the API (binds to 127.0.0.1 by default: there is no auth)."""
+    """Start the API (binds to 127.0.0.1 by default; every page needs a signed-in account)."""
     import uvicorn
     setup_logging()
     uvicorn.run("app.main:app", host=host, port=port, reload=reload)
@@ -99,6 +99,68 @@ def openapi(out: str = typer.Option("../frontend/openapi.json", help="Where to w
     with open(out, "w") as f:
         json.dump(fastapi_app.openapi(), f, indent=2)
     typer.echo(f"wrote {out}")
+
+
+users = typer.Typer(no_args_is_help=True, help="Accounts: create users, reset passwords, make invites.")
+app.add_typer(users, name="user")
+
+
+def _accounts_session():
+    from app.db.session import session_factory, upgrade_db
+    upgrade_db()
+    return session_factory()()
+
+
+@users.command("create")
+def user_create(email: str = typer.Option(..., prompt=True), name: str = typer.Option("", prompt="Name (optional)"),
+                admin: bool = typer.Option(False, "--admin", help="Give admin rights"),
+                password: str = typer.Option(..., prompt=True, hide_input=True, confirmation_prompt=True)) -> None:
+    """Create an account directly (no invite needed)."""
+    from app.auth import accounts
+    with _accounts_session() as s:
+        try:
+            u = accounts.create_user(s, email, name, password, role="admin" if admin else "member")
+            s.commit()
+        except accounts.AuthError as e:
+            typer.secho(str(e), fg=typer.colors.RED, err=True)
+            raise typer.Exit(1)
+        typer.echo(f"created {u.email} ({u.role})")
+
+
+@users.command("reset-password")
+def user_reset(email: str = typer.Option(..., prompt=True),
+               password: str = typer.Option(..., prompt="New password", hide_input=True, confirmation_prompt=True)) -> None:
+    """Set a new password and sign the user out everywhere."""
+    from app.auth import accounts
+    with _accounts_session() as s:
+        try:
+            u = accounts.set_password(s, email, password)
+        except accounts.AuthError as e:
+            typer.secho(str(e), fg=typer.colors.RED, err=True)
+            raise typer.Exit(1)
+        typer.echo(f"password reset for {u.email}; they have been signed out everywhere")
+
+
+@users.command("list")
+def user_list() -> None:
+    """List accounts."""
+    from sqlalchemy import select
+    from app.db.models import User
+    with _accounts_session() as s:
+        for u in s.scalars(select(User).order_by(User.created_at)):
+            typer.echo(f"{u.email:32} {u.role:7} {'active' if u.active else 'disabled':9} last login {u.last_login_at or 'never'}")
+
+
+@users.command("invite")
+def user_invite(email: Optional[str] = typer.Option(None, help="Only this email may use it"),
+                admin: bool = typer.Option(False, "--admin", help="The new account gets admin rights"),
+                days: int = typer.Option(7, help="Days until it expires")) -> None:
+    """Create a one-time sign-up code."""
+    from app.auth import accounts
+    with _accounts_session() as s:
+        inv, code = accounts.create_invite(s, None, email, "admin" if admin else "member", days)
+        typer.echo(f"invite code: {code}  (expires {inv.expires_at:%Y-%m-%d}, role {inv.role}"
+                   f"{', for ' + inv.email if inv.email else ''})")
 
 
 def main() -> None:

@@ -41,3 +41,4 @@ app = ["db/migrations/*.py", "db/migrations/*.mako", "db/migrations/versions/*.p
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["real_auth: run without the signed-in-admin override"]
