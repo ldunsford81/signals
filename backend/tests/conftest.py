@@ -9,8 +9,9 @@ ANCHOR = date(2026, 10, 13)
 @pytest.fixture()
 def tmp_env(tmp_path, monkeypatch):
     """Isolated data dir, database and backups for a test."""
-    monkeypatch.setenv("CTM_DATA_DIR", str(tmp_path / "data"))
-    monkeypatch.setenv("CTM_BACKUP_DIR", str(tmp_path / "backups"))
+    monkeypatch.setenv("SOCIALARB_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("SOCIALARB_BACKUP_DIR", str(tmp_path / "backups"))
+    monkeypatch.delenv("SOCIALARB_DATABASE_URL", raising=False)
     monkeypatch.delenv("CTM_DATABASE_URL", raising=False)
     from app.db.session import get_engine
     get_engine.cache_clear()
@@ -29,8 +30,8 @@ def seeded_db(tmp_path_factory):
     """One seeded + scanned database shared by read-only tests (seeding takes a few seconds)."""
     root = tmp_path_factory.mktemp("seeded")
     mp = pytest.MonkeyPatch()
-    mp.setenv("CTM_DATA_DIR", str(root / "data"))
-    mp.setenv("CTM_BACKUP_DIR", str(root / "backups"))
+    mp.setenv("SOCIALARB_DATA_DIR", str(root / "data"))
+    mp.setenv("SOCIALARB_BACKUP_DIR", str(root / "backups"))
     from app.core.config import load_settings
     from app.db.session import get_engine, session_factory
     from app.pipeline.scan import run_scan

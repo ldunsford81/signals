@@ -1,4 +1,4 @@
-"""`ctm seed`: create the database, run migrations, load the demo catalog and demo observations."""
+"""`socialarb seed`: create the database, run migrations, load the demo catalog and demo observations."""
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -77,7 +77,7 @@ def seed(settings: Settings, reset: bool = False) -> tuple[date, list[RunSummary
             anchor = stored or calendar.last_completed_session()
         if stored and stored != anchor:
             raise SeedError(f"Database was seeded with anchor {stored}; config asks for {anchor}. "
-                            "Run `ctm seed --reset` to rebuild the demo.")
+                            "Run `socialarb seed --reset` to rebuild the demo.")
         state.store_anchor(anchor)
         load_catalog(s, anchor)
         log.info("seeding demo history anchored to %s", anchor)

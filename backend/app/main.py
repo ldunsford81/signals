@@ -1,4 +1,4 @@
-"""FastAPI app. Run with `ctm serve` (binds to 127.0.0.1; there is no auth)."""
+"""FastAPI app. Run with `socialarb serve` (binds to 127.0.0.1; there is no auth)."""
 from __future__ import annotations
 
 import re
@@ -57,7 +57,8 @@ async def lifespan(_: FastAPI):
         sched.shutdown(wait=False)
 
 
-app = FastAPI(title="Consumer Product Trend Monitor", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="SocialArb API", version="0.1.0", lifespan=lifespan,
+              description="SocialArb (socialarb.trade): product buzz, price response and retail chatter, kept separate.")
 app.include_router(router)
 app.include_router(admin_router)
 

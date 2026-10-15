@@ -30,7 +30,7 @@ def test_status_reports_partial_sources(seeded_db):
 def test_scan_endpoint_reports_config_errors(seeded_db, tmp_path, monkeypatch):
     bad = tmp_path / "bad.yaml"
     bad.write_text("stages: nope\n")
-    monkeypatch.setenv("CTM_CONFIG", str(bad))
+    monkeypatch.setenv("SOCIALARB_CONFIG", str(bad))
     with TestClient(app) as c:
         r = c.post("/api/scan", json={}).json()
     assert r["ok"] is False and "Invalid config" in r["error"]

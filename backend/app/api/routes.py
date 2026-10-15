@@ -95,7 +95,7 @@ def status(session: Session = Depends(get_session)) -> StatusOut:
         if s.stale:
             warnings.append(f"{s.source}: stale (last good data {s.last_good_obs_date}, limit {s.staleness_limit_days}d)")
     if scan is None:
-        warnings.append("No scan has run yet. Run `ctm scan` or press Run daily.")
+        warnings.append("No scan has run yet. Run `socialarb scan` or press Run daily.")
     demo = any(c.mode == "demo" for c in settings.sources.values())
     return StatusOut(as_of=scan.as_of if scan else None, latest_scan=scan_info(scan), config_hash=settings.hash(),
                      demo_mode=demo, demo_anchor_date=stored_anchor() if demo else None, warnings=warnings,

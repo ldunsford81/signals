@@ -23,8 +23,8 @@ def replayed(tmp_path_factory):
     """Fresh install: seed, full replay over the seeded history, evaluate (about a minute)."""
     root = tmp_path_factory.mktemp("replayed")
     mp = pytest.MonkeyPatch()
-    mp.setenv("CTM_DATA_DIR", str(root / "data"))
-    mp.setenv("CTM_BACKUP_DIR", str(root / "backups"))
+    mp.setenv("SOCIALARB_DATA_DIR", str(root / "data"))
+    mp.setenv("SOCIALARB_BACKUP_DIR", str(root / "backups"))
     get_engine.cache_clear()
     s = load_settings(overrides={"demo": {"anchor_date": ANCHOR.isoformat()}})
     seed(s)

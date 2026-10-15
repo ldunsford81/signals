@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "trend-monitor"
+name = "socialarb"
 version = "0.1.0"
-description = "Consumer Product Trend Monitor: review tool for product attention, price response and retail interest"
+description = "SocialArb (socialarb.trade): review tool for product buzz, price response and retail chatter"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.110",
@@ -26,8 +26,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8", "httpx>=0.27"]
 
+[project.urls]
+Homepage = "https://socialarb.trade"
+
 [project.scripts]
-ctm = "app.cli:main"
+socialarb = "app.cli:main"
+ctm = "app.cli:main"  # legacy alias
 
 [tool.setuptools.packages.find]
 include = ["app*"]

@@ -7,11 +7,11 @@ Simple, reasonable choices made while building, recorded so they can be revisite
 - **Repo root is the project root.** The prompt's `trend-monitor/` folder maps to this repository's
   root (`backend/`, `frontend/`, `config/`, `data/` sit at the top level).
 - **Python ≥ 3.12.** Developed and tested on 3.13; `pyproject.toml` requires 3.12+.
-- **`ctm` is a console script** from `backend/pyproject.toml` (`pip install -e backend`).
+- **`socialarb` is a console script** from `backend/pyproject.toml` (`pip install -e backend`); `ctm` is kept as an alias.
 - **Typed frontend client:** `openapi-typescript` generates `src/api/schema.d.ts` from the FastAPI
   schema; `src/api/client.ts` is a thin `fetch` wrapper using those types. `openapi.json` is
   committed so the client can be regenerated without a running server.
-- **Paths are overridable** with `CTM_DATA_DIR`, `CTM_DATABASE_URL`, `CTM_CONFIG`, `CTM_BACKUP_DIR`
+- **Paths are overridable** with `SOCIALARB_DATA_DIR`, `SOCIALARB_DATABASE_URL`, `SOCIALARB_CONFIG`, `SOCIALARB_BACKUP_DIR`
   (used by the tests to isolate databases).
 
 ## Data model
@@ -37,11 +37,11 @@ Simple, reasonable choices made while building, recorded so they can be revisite
 ## Demo data
 
 - **Anchor date.** `demo.anchor_date` (config) wins; otherwise the last completed US trading session
-  at seed time. It is written to `data/demo_state.json` so later `ctm ingest` runs extend the same
-  deterministic history instead of shifting it. `ctm seed --reset` re-anchors to today. Dates after
+  at seed time. It is written to `data/demo_state.json` so later `socialarb ingest` runs extend the same
+  deterministic history instead of shifting it. `socialarb seed --reset` re-anchors to today. Dates after
   the anchor continue in the regime the anchor day was in (scenarios will drift after a few days;
   re-seed to refresh).
-- **Seed = catalog + full-history ingest.** `ctm seed` loads the catalog, then runs the normal ingest
+- **Seed = catalog + full-history ingest.** `socialarb seed` loads the catalog, then runs the normal ingest
   runner over 400 days, so seeding exercises the same code path and writes `source_runs`.
 - **Tickers.** CROX, ONON, ELF, YETI, SONO, BOOT, BIRK, WRBY, COTY, OLPX, FIVE are real tickers used for
   realism; every number attached to them (prices, volumes, market caps, analyst counts, earnings
@@ -118,7 +118,7 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   A rescan under a different config hash writes new alerts carrying the new hash; old alerts are
   never touched.
 - **`changed_fields`** tracks `stage`, `price_response` and `retail_status` as `{field, from, to}`.
-- **Scan triggers.** CLI `ctm scan` = `manual`, `ctm daily` (cron) = `schedule`, the UI's Run daily
+- **Scan triggers.** CLI `socialarb scan` = `manual`, `socialarb daily` (cron) = `schedule`, the UI's Run daily
   button = `manual`, replay = `replay`.
 
 ## API and UI
@@ -211,7 +211,7 @@ Simple, reasonable choices made while building, recorded so they can be revisite
   never overlap and all finished ~95 days before the anchor. Replay then yields 56 alerts with a mixed
   record: entries win ~60–70% at 20/60 days, exits look early at 5 days but are right ~2/3 of the time
   at 20 days. Some cells clear the floor; most are still "too few to judge", which is honest.
-- **`ctm daily`** now runs evaluate after the scan. Replay is CLI/API only (the Admin buttons arrive in
+- **`socialarb daily`** now runs evaluate after the scan. Replay is CLI/API only (the Admin buttons arrive in
   step 11); `POST /api/replay` runs synchronously.
 
 ## Admin (step 11)
@@ -279,3 +279,18 @@ Simple, reasonable choices made while building, recorded so they can be revisite
 - **Performance** shows one horizon at a time (5 / 20 / 60 days / through earnings) with a hit-rate bar,
   instead of all sixteen columns at once; the signal log loads 25 rows at a time.
 - **Stage history** on the drill-down keeps the latest scan of each day.
+
+## Name: SocialArb (socialarb.trade)
+
+- **The platform is called SocialArb** and its domain is socialarb.trade. The name appears in the
+  sidebar (Social**Arb**), page titles, the API title, the CLI help, config and docs. The repository and
+  the Python package directory (`app/`) are unchanged.
+- **Command:** `socialarb` (e.g. `socialarb daily`). `ctm`, the working name before the rename, stays
+  as an alias so existing scripts and cron lines keep running.
+- **Environment variables:** `SOCIALARB_DATA_DIR`, `SOCIALARB_DATABASE_URL`, `SOCIALARB_CONFIG`,
+  `SOCIALARB_BACKUP_DIR`. The old `CTM_*` names are still read.
+- **Files:** new installs use `data/socialarb.db`, `data/logs/socialarb.log` and
+  `backups/socialarb-<timestamp>.db`. An existing `data/ctm.db` keeps being used until the database is
+  rebuilt (`socialarb seed --reset` creates `socialarb.db`), so nobody loses data on upgrade.
+- **Domain ≠ public.** The app still has no authentication and binds to 127.0.0.1. Putting it on
+  socialarb.trade needs a login (or a private network) in front of it first.

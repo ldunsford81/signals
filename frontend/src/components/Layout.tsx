@@ -17,7 +17,9 @@ export function Layout() {
             <path d="M6 18 L11 13 L15 16 L22 8" fill="none" stroke="#3987e5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             <circle cx="22" cy="8" r="2" fill="#199e70" />
           </svg>
-          Trend Monitor
+          <span>
+            Social<span style={{ color: "#3987e5" }}>Arb</span>
+          </span>
         </div>
         <div className="nav">
           {NAV.map((n) => (

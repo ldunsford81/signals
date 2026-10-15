@@ -1,4 +1,4 @@
-"""`ctm` command line. Every command calls the same code as the API and the scheduler."""
+"""`socialarb` command line (`ctm` still works as an alias). Every command calls the same code as the API and the scheduler."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ from app.core.config import ConfigError
 from app.core.logging import setup_logging
 from app.pipeline import jobs
 
-app = typer.Typer(add_completion=False, no_args_is_help=True, help="Consumer Product Trend Monitor")
+app = typer.Typer(add_completion=False, no_args_is_help=True, help="SocialArb (socialarb.trade): product buzz vs. price vs. retail chatter")
 
 
 def _parse(d: Optional[str]) -> Optional[date]:

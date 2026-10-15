@@ -44,7 +44,7 @@ function PerformanceTable() {
       </div>
       {data.groups.length === 0 ? (
         <div className="empty-card">
-          No signals scored yet. Run <code>ctm replay</code> then <code>ctm evaluate</code> (or the buttons in Data &amp; settings) to score
+          No signals scored yet. Run <code>socialarb replay</code> then <code>socialarb evaluate</code> (or the buttons in Data &amp; settings) to score
           the rules on the seeded history.
         </div>
       ) : (

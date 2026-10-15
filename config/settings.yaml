@@ -1,4 +1,4 @@
-# Consumer Product Trend Monitor — every threshold, window, stage rule and source setting.
+# SocialArb (socialarb.trade) — every threshold, window, stage rule and source setting.
 # Secrets never go here; they live in .env. Every scan validates and hashes this file and
 # stores it in config_versions, so alerts always point at the config that produced them.
 

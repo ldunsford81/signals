@@ -1,7 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Consumer Product Trend Monitor",
+    "title": "SocialArb API",
+    "description": "SocialArb (socialarb.trade): product buzz, price response and retail chatter, kept separate.",
     "version": "0.1.0"
   },
   "paths": {

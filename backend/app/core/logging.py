@@ -14,13 +14,13 @@ def setup_logging(level: int = logging.INFO) -> None:
     if _configured:
         return
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
-    root = logging.getLogger("ctm")
+    root = logging.getLogger("socialarb")
     root.setLevel(level)
     stream = logging.StreamHandler()
     stream.setFormatter(fmt)
     root.addHandler(stream)
     try:
-        fh = RotatingFileHandler(logs_dir() / "ctm.log", maxBytes=2_000_000, backupCount=5)
+        fh = RotatingFileHandler(logs_dir() / "socialarb.log", maxBytes=2_000_000, backupCount=5)
         fh.setFormatter(fmt)
         root.addHandler(fh)
     except OSError:
@@ -29,4 +29,4 @@ def setup_logging(level: int = logging.INFO) -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    return logging.getLogger(f"ctm.{name}")
+    return logging.getLogger(f"socialarb.{name}")

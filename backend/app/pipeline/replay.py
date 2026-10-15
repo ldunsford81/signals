@@ -27,7 +27,7 @@ def default_range(session: Session, settings: Settings) -> tuple[date, date]:
     first = session.scalar(select(func.min(Observation.obs_date)))
     last = session.scalar(select(func.max(Observation.obs_date)).where(Observation.source == "price"))
     if first is None or last is None:
-        raise ValueError("no observations stored yet; run `ctm seed` or `ctm ingest` first")
+        raise ValueError("no observations stored yet; run `socialarb seed` or `socialarb ingest` first")
     start = first + timedelta(days=settings.health.min_history_days["attention"])
     end = min(last, calendar.last_completed_session())
     return calendar.session_on_or_after(start), calendar.session_on_or_before(end)

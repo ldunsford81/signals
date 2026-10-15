@@ -1,4 +1,6 @@
-# Consumer Product Trend Monitor
+# SocialArb
+
+**[socialarb.trade](https://socialarb.trade)**
 
 A local review tool that tracks three separate signals per consumer product (**product attention**,
 **price response**, **retail interest**) plus earnings timing, maps them to a stage with an explicit
@@ -27,19 +29,19 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -e ".[dev]"
 
-# 2. Seed the demo (creates data/ctm.db, runs migrations, loads 400 days of synthetic history)
-ctm seed
+# 2. Seed the demo (creates data/socialarb.db, runs migrations, loads 400 days of synthetic history)
+socialarb seed
 
 # 3. Scan as of the last completed US trading session
-ctm scan
+socialarb scan
 
 # 3b. Score the rules on history: replay every trading day in the seeded history (~1 minute),
 #     then fill forward returns for every alert
-ctm replay
-ctm evaluate
+socialarb replay
+socialarb evaluate
 
 # 4. Start the API (http://127.0.0.1:8000, docs at /docs)
-ctm serve
+socialarb serve
 ```
 
 In a second terminal:
@@ -59,7 +61,7 @@ component. The sidebar also has **Tickers** (every product and status in one tab
 (how past signals turned out, and the signal log) and **Data & settings** (jobs, feed health, companies,
 products, announcements, CSV import).
 
-Next time, you only need `cd backend && source .venv/bin/activate && ctm serve` in one terminal and
+Next time, you only need `cd backend && source .venv/bin/activate && socialarb serve` in one terminal and
 `cd frontend && npm run dev` in another.
 
 ## Install and run — Windows (PowerShell)
@@ -72,11 +74,11 @@ py -3.12 -m venv .venv
 pip install -e ".[dev]"
 
 # 2-4. Seed, scan, replay + evaluate, serve
-ctm seed
-ctm scan
-ctm replay
-ctm evaluate
-ctm serve
+socialarb seed
+socialarb scan
+socialarb replay
+socialarb evaluate
+socialarb serve
 ```
 
 In a second PowerShell window:
@@ -93,15 +95,17 @@ Then open http://127.0.0.1:5173.
 
 | Command | API | What it does |
 | --- | --- | --- |
-| `ctm seed [--reset]` | — | Create the DB, run migrations, load the demo catalog and demo observations. `--reset` deletes the DB and re-anchors the demo to today. |
-| `ctm ingest [--source S] [--as-of D]` | `POST /api/ingest` | Run every enabled adapter; write observations and `source_runs`. |
-| `ctm scan [--as-of D]` | `POST /api/scan` | Compute statuses, stages and alerts as of D (default: last completed US session). |
-| `ctm daily [--as-of D]` | `POST /api/daily` | Backup, ingest, scan, then evaluate. The UI's **Run daily** button calls the same code. |
-| `ctm replay [--start D1] [--end D2]` | `POST /api/replay` | Run the scan for every trading day in the range (default: the whole stored history). Alerts are tagged `replay`. Re-running skips days already replayed under the same config. |
-| `ctm evaluate` | `POST /api/evaluate` | Fill `alert_outcomes` (5 / 20 / 60 trading days and through earnings) for every alert; unfinished horizons hold the return so far. |
-| `ctm backup` | — | Copy the SQLite file to `backups/` with a timestamp. |
-| `ctm serve` | — | Start the API on 127.0.0.1:8000. |
-| `ctm openapi` | — | Write `frontend/openapi.json`; `npm run gen:api` regenerates the typed client from it. |
+| `socialarb seed [--reset]` | — | Create the DB, run migrations, load the demo catalog and demo observations. `--reset` deletes the DB and re-anchors the demo to today. |
+| `socialarb ingest [--source S] [--as-of D]` | `POST /api/ingest` | Run every enabled adapter; write observations and `source_runs`. |
+| `socialarb scan [--as-of D]` | `POST /api/scan` | Compute statuses, stages and alerts as of D (default: last completed US session). |
+| `socialarb daily [--as-of D]` | `POST /api/daily` | Backup, ingest, scan, then evaluate. The UI's **Run daily** button calls the same code. |
+| `socialarb replay [--start D1] [--end D2]` | `POST /api/replay` | Run the scan for every trading day in the range (default: the whole stored history). Alerts are tagged `replay`. Re-running skips days already replayed under the same config. |
+| `socialarb evaluate` | `POST /api/evaluate` | Fill `alert_outcomes` (5 / 20 / 60 trading days and through earnings) for every alert; unfinished horizons hold the return so far. |
+| `socialarb backup` | — | Copy the SQLite file to `backups/` with a timestamp. |
+| `socialarb serve` | — | Start the API on 127.0.0.1:8000. |
+| `socialarb openapi` | — | Write `frontend/openapi.json`; `npm run gen:api` regenerates the typed client from it. |
+
+`ctm` still works as an alias for `socialarb` (the project's working name before the rename).
 
 
 ## What the demo shows
@@ -128,27 +132,27 @@ The watchlist defaults to the 6–14 week earnings window; untick the box to see
 
 ## Schedule
 
-Run `ctm daily` at 08:30 Australia/Sydney, Tuesday to Saturday (after the US close).
+Run `socialarb daily` at 08:30 Australia/Sydney, Tuesday to Saturday (after the US close).
 
 **macOS / Linux cron** (`crontab -e`; `CRON_TZ` is honoured by cronie/Linux; on macOS the machine's
 local time zone is used, so set the Mac to Sydney time or adjust the hour):
 
 ```cron
 CRON_TZ=Australia/Sydney
-30 8 * * 2-6  cd /path/to/signals/backend && .venv/bin/ctm daily >> ../data/logs/cron.log 2>&1
+30 8 * * 2-6  cd /path/to/signals/backend && .venv/bin/socialarb daily >> ../data/logs/cron.log 2>&1
 ```
 
 **Windows Task Scheduler:**
 
 ```powershell
-schtasks /Create /TN "Trend Monitor daily" /SC WEEKLY /D TUE,WED,THU,FRI,SAT /ST 08:30 `
-  /TR "C:\path\to\signals\backend\.venv\Scripts\ctm.exe daily"
+schtasks /Create /TN "SocialArb daily" /SC WEEKLY /D TUE,WED,THU,FRI,SAT /ST 08:30 `
+  /TR "C:\path\to\signals\backend\.venv\Scripts\socialarb.exe daily"
 ```
 
 A missed day is harmless: the next run ingests any gap and scans as of the last completed session.
 
 There is also an optional in-process scheduler (APScheduler) for an always-on machine: set
-`schedule.in_process_enabled: true` in `config/settings.yaml` and keep `ctm serve` running.
+`schedule.in_process_enabled: true` in `config/settings.yaml` and keep `socialarb serve` running.
 
 ## Configuration
 
@@ -162,6 +166,7 @@ or logged.
 
 There is no authentication, so the API binds to `127.0.0.1` only. If it ever runs on another
 machine, put it behind a private network such as Tailscale; do not expose it to the internet.
+Serving it publicly at socialarb.trade needs a login in front of it first (it has none today).
 
 ## Tests
 

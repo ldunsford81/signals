@@ -44,7 +44,7 @@ def backup_job() -> dict:
     db = database_file()
     if not db or not db.exists():
         return {"backup": None, "message": "no database file to back up"}
-    dest = backups_dir() / f"ctm-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}.db"
+    dest = backups_dir() / f"socialarb-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}.db"
     src = sqlite3.connect(db)
     try:
         with sqlite3.connect(dest) as out:
