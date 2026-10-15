@@ -1,13 +1,13 @@
 // Presentational only: colour by status value, grey + hover reason for unknown.
 const LABELS: Record<string, string> = {
-  entry_review: "Entry review",
-  early_recognition: "Early recognition",
-  exit_review: "Exit review",
-  watch: "Watch",
+  entry_review: "Entry signal",
+  early_recognition: "Early mover",
+  exit_review: "Exit signal",
+  watch: "Watching",
   data_gap: "Data gap",
   none: "—",
-  early_move: "early move",
-  clear_acceleration: "clear accel.",
+  early_move: "moving",
+  clear_acceleration: "breaking out",
 };
 
 export function Badge({ value, reason, kind = "status" }: { value: string; reason?: string | null; kind?: "status" | "stage" }) {

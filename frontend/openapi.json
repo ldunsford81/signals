@@ -222,6 +222,92 @@
         }
       }
     },
+    "/api/dashboard": {
+      "get": {
+        "summary": "Dashboard View",
+        "description": "Today's read: one row per ticker, buy-side and sell-side signals, the radar, feed health.",
+        "operationId": "dashboard_view_api_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickers/{ticker}": {
+      "get": {
+        "summary": "Ticker",
+        "operationId": "ticker_api_tickers__ticker__get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 400,
+              "minimum": 30,
+              "default": 60,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TickerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/feed": {
       "get": {
         "summary": "Feed",
@@ -1946,6 +2032,72 @@
         ],
         "title": "BandPoint"
       },
+      "ChartPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "ChartPoint"
+      },
+      "Check": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "ok"
+        ],
+        "title": "Check"
+      },
       "CompanyIn": {
         "properties": {
           "ticker": {
@@ -2352,6 +2504,177 @@
           "products"
         ],
         "title": "CsvTemplates"
+      },
+      "DashScan": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "as_of",
+          "finished_at",
+          "config_hash"
+        ],
+        "title": "DashScan"
+      },
+      "DashboardOut": {
+        "properties": {
+          "scan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashScan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headline": {
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            },
+            "type": "array",
+            "title": "Headline"
+          },
+          "kpis": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/KpiCount"
+            },
+            "type": "object",
+            "title": "Kpis"
+          },
+          "buy": {
+            "items": {
+              "$ref": "#/components/schemas/TickerRow"
+            },
+            "type": "array",
+            "title": "Buy"
+          },
+          "sell": {
+            "items": {
+              "$ref": "#/components/schemas/TickerRow"
+            },
+            "type": "array",
+            "title": "Sell"
+          },
+          "radar": {
+            "items": {
+              "$ref": "#/components/schemas/RadarRow"
+            },
+            "type": "array",
+            "title": "Radar"
+          },
+          "board": {
+            "items": {
+              "$ref": "#/components/schemas/TickerRow"
+            },
+            "type": "array",
+            "title": "Board"
+          },
+          "health": {
+            "$ref": "#/components/schemas/HealthSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scan",
+          "headline",
+          "kpis",
+          "buy",
+          "sell",
+          "radar",
+          "board",
+          "health"
+        ],
+        "title": "DashboardOut"
+      },
+      "Decision": {
+        "properties": {
+          "alert_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Id"
+          },
+          "alert_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert As Of"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alert_id",
+          "alert_as_of",
+          "decision",
+          "note",
+          "reviewed_at"
+        ],
+        "title": "Decision"
       },
       "DetailScan": {
         "properties": {
@@ -3023,6 +3346,24 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HealthIssue": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "message"
+        ],
+        "title": "HealthIssue"
+      },
       "HealthItem": {
         "properties": {
           "product_id": {
@@ -3088,6 +3429,27 @@
           "reason"
         ],
         "title": "HealthItem"
+      },
+      "HealthSummary": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/HealthIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "issues"
+        ],
+        "title": "HealthSummary"
       },
       "HistoryRow": {
         "properties": {
@@ -3275,6 +3637,35 @@
           "ok"
         ],
         "title": "JobOut"
+      },
+      "KpiCount": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "new": {
+            "type": "integer",
+            "title": "New"
+          },
+          "attention_needed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attention Needed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "new"
+        ],
+        "title": "KpiCount"
       },
       "Outcome": {
         "properties": {
@@ -3558,6 +3949,46 @@
         ],
         "title": "PricePoint"
       },
+      "ProductChoice": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "stage",
+          "label",
+          "strength"
+        ],
+        "title": "ProductChoice"
+      },
       "ProductDetailOut": {
         "properties": {
           "product": {
@@ -3824,6 +4255,251 @@
         ],
         "title": "ProductOut"
       },
+      "RadarRow": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name"
+          },
+          "company_id": {
+            "type": "integer",
+            "title": "Company Id"
+          },
+          "is_demo": {
+            "type": "boolean",
+            "title": "Is Demo"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Side"
+          },
+          "attention": {
+            "type": "string",
+            "title": "Attention"
+          },
+          "buzz_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buzz Ratio"
+          },
+          "buzz_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buzz Days"
+          },
+          "sources_ok": {
+            "type": "integer",
+            "title": "Sources Ok"
+          },
+          "sources_total": {
+            "type": "integer",
+            "title": "Sources Total"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "relative_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Return"
+          },
+          "volume_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Ratio"
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark"
+          },
+          "retail": {
+            "type": "string",
+            "title": "Retail"
+          },
+          "days_to_earnings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Earnings"
+          },
+          "earnings_status": {
+            "type": "string",
+            "title": "Earnings Status"
+          },
+          "earnings_projected": {
+            "type": "boolean",
+            "title": "Earnings Projected"
+          },
+          "quarter_closed": {
+            "type": "boolean",
+            "title": "Quarter Closed"
+          },
+          "single_source": {
+            "type": "boolean",
+            "title": "Single Source"
+          },
+          "new_today": {
+            "type": "boolean",
+            "title": "New Today"
+          },
+          "unknown_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unknown Reasons"
+          },
+          "buzz_spark": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Buzz Spark",
+            "default": []
+          },
+          "price_spark": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Price Spark",
+            "default": []
+          },
+          "products_in_signal": {
+            "type": "integer",
+            "title": "Products In Signal",
+            "default": 0
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "company",
+          "short_name",
+          "company_id",
+          "is_demo",
+          "product_id",
+          "product",
+          "stage",
+          "label",
+          "side",
+          "attention",
+          "buzz_ratio",
+          "buzz_days",
+          "sources_ok",
+          "sources_total",
+          "strength",
+          "price",
+          "relative_return",
+          "volume_ratio",
+          "benchmark",
+          "retail",
+          "days_to_earnings",
+          "earnings_status",
+          "earnings_projected",
+          "quarter_closed",
+          "single_source",
+          "new_today",
+          "unknown_reasons",
+          "kind",
+          "note"
+        ],
+        "title": "RadarRow"
+      },
       "ReplayIn": {
         "properties": {
           "start": {
@@ -4045,6 +4721,93 @@
           "status"
         ],
         "title": "ScanInfo"
+      },
+      "Segment": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "strong": {
+            "type": "boolean",
+            "title": "Strong",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "Segment"
+      },
+      "SignalSummary": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Side"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "signal_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signal Start Date"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "type": "array",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "label",
+          "side",
+          "since",
+          "signal_start_date",
+          "verdict",
+          "checks"
+        ],
+        "title": "SignalSummary"
       },
       "SourceSeries": {
         "properties": {
@@ -4272,6 +5035,418 @@
           "sources"
         ],
         "title": "StatusOut"
+      },
+      "TickerChart": {
+        "properties": {
+          "buzz_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buzz Source"
+          },
+          "buzz": {
+            "items": {
+              "$ref": "#/components/schemas/ChartPoint"
+            },
+            "type": "array",
+            "title": "Buzz"
+          },
+          "price_rel": {
+            "items": {
+              "$ref": "#/components/schemas/ChartPoint"
+            },
+            "type": "array",
+            "title": "Price Rel"
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark"
+          },
+          "early_move": {
+            "type": "number",
+            "title": "Early Move"
+          },
+          "clear_acceleration": {
+            "type": "number",
+            "title": "Clear Acceleration"
+          },
+          "window_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "buzz_source",
+          "buzz",
+          "price_rel",
+          "benchmark",
+          "early_move",
+          "clear_acceleration",
+          "window_start"
+        ],
+        "title": "TickerChart"
+      },
+      "TickerOut": {
+        "properties": {
+          "company": {
+            "$ref": "#/components/schemas/CompanyInfo"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductChoice"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductInfo"
+          },
+          "scan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetailScan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "announcements": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementOut"
+            },
+            "type": "array",
+            "title": "Announcements"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryRow"
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "signal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SignalSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tiles": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiles"
+          },
+          "earnings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earnings"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chart": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TickerChart"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "$ref": "#/components/schemas/ProductDetailOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company",
+          "products",
+          "product",
+          "scan",
+          "announcements",
+          "history",
+          "signal",
+          "detail"
+        ],
+        "title": "TickerOut"
+      },
+      "TickerRow": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name"
+          },
+          "company_id": {
+            "type": "integer",
+            "title": "Company Id"
+          },
+          "is_demo": {
+            "type": "boolean",
+            "title": "Is Demo"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Side"
+          },
+          "attention": {
+            "type": "string",
+            "title": "Attention"
+          },
+          "buzz_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buzz Ratio"
+          },
+          "buzz_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buzz Days"
+          },
+          "sources_ok": {
+            "type": "integer",
+            "title": "Sources Ok"
+          },
+          "sources_total": {
+            "type": "integer",
+            "title": "Sources Total"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "relative_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Return"
+          },
+          "volume_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Ratio"
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark"
+          },
+          "retail": {
+            "type": "string",
+            "title": "Retail"
+          },
+          "days_to_earnings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Earnings"
+          },
+          "earnings_status": {
+            "type": "string",
+            "title": "Earnings Status"
+          },
+          "earnings_projected": {
+            "type": "boolean",
+            "title": "Earnings Projected"
+          },
+          "quarter_closed": {
+            "type": "boolean",
+            "title": "Quarter Closed"
+          },
+          "single_source": {
+            "type": "boolean",
+            "title": "Single Source"
+          },
+          "new_today": {
+            "type": "boolean",
+            "title": "New Today"
+          },
+          "unknown_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unknown Reasons"
+          },
+          "buzz_spark": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Buzz Spark",
+            "default": []
+          },
+          "price_spark": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Price Spark",
+            "default": []
+          },
+          "products_in_signal": {
+            "type": "integer",
+            "title": "Products In Signal",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "company",
+          "short_name",
+          "company_id",
+          "is_demo",
+          "product_id",
+          "product",
+          "stage",
+          "label",
+          "side",
+          "attention",
+          "buzz_ratio",
+          "buzz_days",
+          "sources_ok",
+          "sources_total",
+          "strength",
+          "price",
+          "relative_return",
+          "volume_ratio",
+          "benchmark",
+          "retail",
+          "days_to_earnings",
+          "earnings_status",
+          "earnings_projected",
+          "quarter_closed",
+          "single_source",
+          "new_today",
+          "unknown_reasons"
+        ],
+        "title": "TickerRow"
       },
       "UnknownInput": {
         "properties": {

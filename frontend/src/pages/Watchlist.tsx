@@ -38,7 +38,7 @@ function Row({ r }: { r: WatchlistRow }) {
       </td>
       <td className="mono">{r.ticker}</td>
       <td>
-        <Link to={`/products/${r.product_id}`}>{r.product}</Link>
+        <Link to={`/tickers/${r.ticker}?product=${r.product_id}`}>{r.product}</Link>
       </td>
       <td>
         <Badge kind="stage" value={r.stage} />
@@ -93,11 +93,17 @@ export function Watchlist() {
 
   return (
     <section>
+      <header className="page-head" style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span className="eyebrow">Every product, every status</span>
+          <h1>Tickers</h1>
+        </div>
+      </header>
       <div className="filters">
         <Select label="Stage" value={q.stage} options={STAGES} onChange={set("stage")} />
-        <Select label="Attention" value={q.attention} options={ATTENTION} onChange={set("attention")} />
+        <Select label="Buzz" value={q.attention} options={ATTENTION} onChange={set("attention")} />
         <Select label="Price" value={q.price} options={PRICE} onChange={set("price")} />
-        <Select label="Retail" value={q.retail} options={RETAIL} onChange={set("retail")} />
+        <Select label="Chatter" value={q.retail} options={RETAIL} onChange={set("retail")} />
         <label className="filter check">
           <input type="checkbox" checked={q.earnings_window} onChange={(e) => setQ({ ...q, earnings_window: e.target.checked })} />
           Earnings in {Math.round(lo / 7)}–{Math.round(hi / 7)} weeks
@@ -115,9 +121,9 @@ export function Watchlist() {
               <th>Ticker</th>
               <th>Product</th>
               <th>Stage</th>
-              <th>Product attention</th>
+              <th>Product buzz</th>
               <th>Price response</th>
-              <th>Retail interest</th>
+              <th>Retail chatter</th>
               <th className="num">Days to earnings</th>
               <th className="num">Days left in quarter</th>
             </tr>

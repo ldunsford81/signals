@@ -102,7 +102,7 @@ export function Detail() {
   );
 }
 
-function DetailBody({ d, days, setDays }: { d: ProductDetail; days: number; setDays: (n: number) => void }) {
+export function DetailBody({ d, days, setDays }: { d: ProductDetail; days: number; setDays: (n: number) => void }) {
   const st = d.state!;
   const ticker = d.company.ticker;
   const health = st.input_health as any;

@@ -55,6 +55,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard View
+         * @description Today's read: one row per ticker, buy-side and sell-side signals, the radar, feed health.
+         */
+        get: operations["dashboard_view_api_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickers/{ticker}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ticker */
+        get: operations["ticker_api_tickers__ticker__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/feed": {
         parameters: {
             query?: never;
@@ -667,6 +704,27 @@ export interface components {
             /** Breadth Short Mean */
             breadth_short_mean?: number | null;
         };
+        /** ChartPoint */
+        ChartPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: number | null;
+            /** Low */
+            low?: number | null;
+            /** High */
+            high?: number | null;
+        };
+        /** Check */
+        Check: {
+            /** Label */
+            label: string;
+            /** Ok */
+            ok: boolean;
+        };
         /** CompanyIn */
         CompanyIn: {
             /** Ticker */
@@ -806,6 +864,52 @@ export interface components {
             companies: string[];
             /** Products */
             products: string[];
+        };
+        /** DashScan */
+        DashScan: {
+            /** Id */
+            id: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Config Hash */
+            config_hash: string;
+        };
+        /** DashboardOut */
+        DashboardOut: {
+            scan: components["schemas"]["DashScan"] | null;
+            /** Headline */
+            headline: components["schemas"]["Segment"][];
+            /** Kpis */
+            kpis: {
+                [key: string]: components["schemas"]["KpiCount"];
+            };
+            /** Buy */
+            buy: components["schemas"]["TickerRow"][];
+            /** Sell */
+            sell: components["schemas"]["TickerRow"][];
+            /** Radar */
+            radar: components["schemas"]["RadarRow"][];
+            /** Board */
+            board: components["schemas"]["TickerRow"][];
+            health: components["schemas"]["HealthSummary"];
+        };
+        /** Decision */
+        Decision: {
+            /** Alert Id */
+            alert_id: number | null;
+            /** Alert As Of */
+            alert_as_of: string | null;
+            /** Decision */
+            decision: string;
+            /** Note */
+            note: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
         };
         /** DetailScan */
         DetailScan: {
@@ -1004,6 +1108,13 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HealthIssue */
+        HealthIssue: {
+            /** Source */
+            source: string;
+            /** Message */
+            message: string;
+        };
         /** HealthItem */
         HealthItem: {
             /** Product Id */
@@ -1022,6 +1133,13 @@ export interface components {
             unknown_inputs: components["schemas"]["UnknownInput"][];
             /** Reason */
             reason: string | null;
+        };
+        /** HealthSummary */
+        HealthSummary: {
+            /** Ok */
+            ok: boolean;
+            /** Issues */
+            issues: components["schemas"]["HealthIssue"][];
         };
         /** HistoryRow */
         HistoryRow: {
@@ -1083,6 +1201,15 @@ export interface components {
             } | null;
             /** Error */
             error?: string | null;
+        };
+        /** KpiCount */
+        KpiCount: {
+            /** Count */
+            count: number;
+            /** New */
+            new: number;
+            /** Attention Needed */
+            attention_needed?: number | null;
         };
         /** Outcome */
         Outcome: {
@@ -1170,6 +1297,19 @@ export interface components {
             /** Benchmark Rebased */
             benchmark_rebased: number | null;
         };
+        /** ProductChoice */
+        ProductChoice: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Stage */
+            stage: string;
+            /** Label */
+            label: string;
+            /** Strength */
+            strength: number | null;
+        };
         /** ProductDetailOut */
         ProductDetailOut: {
             product: components["schemas"]["ProductInfo"];
@@ -1250,6 +1390,84 @@ export interface components {
             /** Ticker */
             ticker: string;
         };
+        /** RadarRow */
+        RadarRow: {
+            /** Ticker */
+            ticker: string;
+            /** Company */
+            company: string;
+            /** Short Name */
+            short_name: string;
+            /** Company Id */
+            company_id: number;
+            /** Is Demo */
+            is_demo: boolean;
+            /** Product Id */
+            product_id: number;
+            /** Product */
+            product: string;
+            /** Stage */
+            stage: string;
+            /** Label */
+            label: string;
+            /** Side */
+            side: string | null;
+            /** Attention */
+            attention: string;
+            /** Buzz Ratio */
+            buzz_ratio: number | null;
+            /** Buzz Days */
+            buzz_days: number | null;
+            /** Sources Ok */
+            sources_ok: number;
+            /** Sources Total */
+            sources_total: number;
+            /** Strength */
+            strength: number | null;
+            /** Price */
+            price: string;
+            /** Relative Return */
+            relative_return: number | null;
+            /** Volume Ratio */
+            volume_ratio: number | null;
+            /** Benchmark */
+            benchmark: string;
+            /** Retail */
+            retail: string;
+            /** Days To Earnings */
+            days_to_earnings: number | null;
+            /** Earnings Status */
+            earnings_status: string;
+            /** Earnings Projected */
+            earnings_projected: boolean;
+            /** Quarter Closed */
+            quarter_closed: boolean;
+            /** Single Source */
+            single_source: boolean;
+            /** New Today */
+            new_today: boolean;
+            /** Unknown Reasons */
+            unknown_reasons: string[];
+            /**
+             * Buzz Spark
+             * @default []
+             */
+            buzz_spark: (number | null)[];
+            /**
+             * Price Spark
+             * @default []
+             */
+            price_spark: (number | null)[];
+            /**
+             * Products In Signal
+             * @default 0
+             */
+            products_in_signal: number;
+            /** Kind */
+            kind: string;
+            /** Note */
+            note: string;
+        };
         /** ReplayIn */
         ReplayIn: {
             /** Start */
@@ -1322,6 +1540,33 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** Segment */
+        Segment: {
+            /** Text */
+            text: string;
+            /**
+             * Strong
+             * @default false
+             */
+            strong: boolean;
+        };
+        /** SignalSummary */
+        SignalSummary: {
+            /** Stage */
+            stage: string;
+            /** Label */
+            label: string;
+            /** Side */
+            side: string | null;
+            /** Since */
+            since: string | null;
+            /** Signal Start Date */
+            signal_start_date: string | null;
+            /** Verdict */
+            verdict: string;
+            /** Checks */
+            checks: components["schemas"]["Check"][];
+        };
         /** SourceSeries */
         SourceSeries: {
             /** Source */
@@ -1375,6 +1620,123 @@ export interface components {
             warnings: string[];
             /** Sources */
             sources: components["schemas"]["SourceStatus"][];
+        };
+        /** TickerChart */
+        TickerChart: {
+            /** Buzz Source */
+            buzz_source: string | null;
+            /** Buzz */
+            buzz: components["schemas"]["ChartPoint"][];
+            /** Price Rel */
+            price_rel: components["schemas"]["ChartPoint"][];
+            /** Benchmark */
+            benchmark: string;
+            /** Early Move */
+            early_move: number;
+            /** Clear Acceleration */
+            clear_acceleration: number;
+            /** Window Start */
+            window_start: string | null;
+        };
+        /** TickerOut */
+        TickerOut: {
+            company: components["schemas"]["CompanyInfo"];
+            /** Products */
+            products: components["schemas"]["ProductChoice"][];
+            product: components["schemas"]["ProductInfo"];
+            scan: components["schemas"]["DetailScan"] | null;
+            /** Announcements */
+            announcements: components["schemas"]["AnnouncementOut"][];
+            /** History */
+            history: components["schemas"]["HistoryRow"][];
+            signal: components["schemas"]["SignalSummary"] | null;
+            /** Tiles */
+            tiles?: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            /** Earnings */
+            earnings?: {
+                [key: string]: unknown;
+            } | null;
+            decision?: components["schemas"]["Decision"] | null;
+            chart?: components["schemas"]["TickerChart"] | null;
+            detail: components["schemas"]["ProductDetailOut"];
+        };
+        /** TickerRow */
+        TickerRow: {
+            /** Ticker */
+            ticker: string;
+            /** Company */
+            company: string;
+            /** Short Name */
+            short_name: string;
+            /** Company Id */
+            company_id: number;
+            /** Is Demo */
+            is_demo: boolean;
+            /** Product Id */
+            product_id: number;
+            /** Product */
+            product: string;
+            /** Stage */
+            stage: string;
+            /** Label */
+            label: string;
+            /** Side */
+            side: string | null;
+            /** Attention */
+            attention: string;
+            /** Buzz Ratio */
+            buzz_ratio: number | null;
+            /** Buzz Days */
+            buzz_days: number | null;
+            /** Sources Ok */
+            sources_ok: number;
+            /** Sources Total */
+            sources_total: number;
+            /** Strength */
+            strength: number | null;
+            /** Price */
+            price: string;
+            /** Relative Return */
+            relative_return: number | null;
+            /** Volume Ratio */
+            volume_ratio: number | null;
+            /** Benchmark */
+            benchmark: string;
+            /** Retail */
+            retail: string;
+            /** Days To Earnings */
+            days_to_earnings: number | null;
+            /** Earnings Status */
+            earnings_status: string;
+            /** Earnings Projected */
+            earnings_projected: boolean;
+            /** Quarter Closed */
+            quarter_closed: boolean;
+            /** Single Source */
+            single_source: boolean;
+            /** New Today */
+            new_today: boolean;
+            /** Unknown Reasons */
+            unknown_reasons: string[];
+            /**
+             * Buzz Spark
+             * @default []
+             */
+            buzz_spark: (number | null)[];
+            /**
+             * Price Spark
+             * @default []
+             */
+            price_spark: (number | null)[];
+            /**
+             * Products In Signal
+             * @default 0
+             */
+            products_in_signal: number;
         };
         /** UnknownInput */
         UnknownInput: {
@@ -1535,6 +1897,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_view_api_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+        };
+    };
+    ticker_api_tickers__ticker__get: {
+        parameters: {
+            query?: {
+                product_id?: number | null;
+                days?: number;
+            };
+            header?: never;
+            path: {
+                ticker: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TickerOut"];
                 };
             };
             /** @description Validation Error */

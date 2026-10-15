@@ -112,3 +112,14 @@ export const adminApi = {
     request<ImportOut>("POST", `/api/admin/import/${kind}`, undefined, { csv, dry_run }),
   run: (job: "ingest" | "scan" | "daily" | "replay" | "evaluate") => request<JobOut>("POST", `/api/${job}`, undefined, {}),
 };
+
+export type DashboardOut = S["DashboardOut"];
+export type TickerRow = S["TickerRow"];
+export type RadarRow = S["RadarRow"];
+export type TickerOut = S["TickerOut"];
+
+export const viewApi = {
+  dashboard: () => request<DashboardOut>("GET", "/api/dashboard"),
+  ticker: (ticker: string, productId: number | null, days: number) =>
+    request<TickerOut>("GET", `/api/tickers/${encodeURIComponent(ticker)}`, { product_id: productId ?? undefined, days }),
+};

@@ -1,65 +1,40 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet } from "react-router-dom";
-import { api } from "../api/client";
 
-function localTime(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso.endsWith("Z") || iso.includes("+") ? iso : `${iso}Z`);
-  return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-}
+const NAV = [
+  { to: "/", label: "Dashboard", end: true, icon: <><rect x="3" y="3" width="7" height="9" rx="2" /><rect x="14" y="3" width="7" height="5" rx="2" /><rect x="14" y="12" width="7" height="9" rx="2" /><rect x="3" y="16" width="7" height="5" rx="2" /></> },
+  { to: "/tickers", label: "Tickers", end: false, icon: <><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></> },
+  { to: "/performance", label: "Performance", end: false, icon: <><path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-7" /><path d="M22 20H2" /></> },
+  { to: "/settings", label: "Data & settings", end: false, icon: <><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></> },
+];
 
 export function Layout() {
-  const qc = useQueryClient();
-  const status = useQuery({ queryKey: ["status"], queryFn: api.status });
-  const daily = useMutation({
-    mutationFn: api.daily,
-    onSettled: () => qc.invalidateQueries(),
-  });
-  const s = status.data;
   return (
-    <div className="app">
-      <header className="topbar">
-        <div className="brand">Trend Monitor</div>
-        <nav>
-          <NavLink to="/" end>
-            Watchlist
-          </NavLink>
-          <NavLink to="/feed">Review feed</NavLink>
-          <NavLink to="/alerts">Alerts &amp; evaluation</NavLink>
-          <NavLink to="/admin">Admin</NavLink>
-        </nav>
-        <div className="asof">
-          {s?.as_of ? (
-            <>
-              As of <strong>{s.as_of}</strong> (US session) · scanned {localTime(s.latest_scan?.finished_at)} local · config{" "}
-              <code>{s.config_hash.slice(0, 8)}</code>
-            </>
-          ) : (
-            "No scan yet"
-          )}
+    <div className="shell">
+      <nav className="sidebar" aria-label="Main">
+        <div className="brand">
+          <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+            <rect width="28" height="28" rx="8" fill="#1a2436" />
+            <path d="M6 18 L11 13 L15 16 L22 8" fill="none" stroke="#3987e5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="22" cy="8" r="2" fill="#199e70" />
+          </svg>
+          Trend Monitor
         </div>
-        <button onClick={() => daily.mutate()} disabled={daily.isPending}>
-          {daily.isPending ? "Running…" : "Run daily"}
-        </button>
-      </header>
-      {s?.demo_mode && (
-        <div className="banner demo">
-          Demo data — all numbers are synthetic{s.demo_anchor_date ? `, anchored to ${s.demo_anchor_date}` : ""}. No source is live.
+        <div className="nav">
+          {NAV.map((n) => (
+            <NavLink key={n.to} to={n.to} end={n.end}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                {n.icon}
+              </svg>
+              {n.label}
+            </NavLink>
+          ))}
         </div>
-      )}
-      {s && s.warnings.length > 0 && (
-        <div className="banner warn">
-          <strong>Data health:</strong>
-          <ul>
-            {s.warnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
+        <div className="sidebar-foot">
+          <span className="demo-chip">Demo data</span>
+          <span>Synthetic numbers on real tickers. A review tool, not trading advice.</span>
         </div>
-      )}
-      {daily.data && !daily.data.ok && <div className="banner error">Run daily failed: {daily.data.error}</div>}
-      {status.error && <div className="banner error">API unreachable: {String(status.error)}</div>}
-      <main>
+      </nav>
+      <main className="content">
         <Outlet />
       </main>
     </div>

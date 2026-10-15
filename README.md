@@ -7,9 +7,9 @@ claim that the signal has alpha.
 
 Everything runs on seeded, synthetic demo data with **zero API keys and zero paid services**.
 
-> **Build status:** steps 1–11 of the build prompt are done: everything except the live-source stubs,
-> the earnings CSV mode and the final README/DECISIONS pass (step 12). All five screens work:
-> Watchlist, product Detail, Review feed, Alerts & evaluation, and Admin.
+> **Build status:** steps 1–11 of the build prompt are done, plus a UI redesign (dark theme, a
+> consolidated Dashboard and Ticker page). Step 12 (live-source stubs, the earnings CSV mode and the
+> final docs pass) is next.
 
 ## Requirements
 
@@ -50,14 +50,14 @@ npm install
 npm run dev          # http://127.0.0.1:5173
 ```
 
-Click any product name on the watchlist to open its Detail page. **Review feed** (top nav) lists
-today's entry, early-recognition and exit cases with the reason each one fired, what changed since
-the last scan, and buttons to record your decision (acted / passed / exited + a note).
-**Alerts & evaluation** shows the rules-performance table (hit rate, median and mean excess return
-per horizon, by stage, config version and trigger) and the immutable alert log with each alert's
-outcomes and full input snapshot. **Admin** is where you add and edit companies, products and
-announcements (or import them from CSV), fix earnings dates, see each source's last run, and run
-ingest / scan / daily / replay / evaluate with a button.
+The app opens on the **Dashboard**: a one-sentence read of the day, counts of entry signals, early
+movers and exit signals, buy-side and sell-side signal cards, an "on the radar" list, and one row per
+ticker. Click any ticker for its page: a plain-English verdict, the checks behind it, the three signals
+(product buzz, price vs benchmark, retail chatter), one chart of buzz against the stock, and your
+decision (acted / passed / exited + a note). "Show all the numbers" opens every raw series and
+component. The sidebar also has **Tickers** (every product and status in one table), **Performance**
+(how past signals turned out, and the signal log) and **Data & settings** (jobs, feed health, companies,
+products, announcements, CSV import).
 
 Next time, you only need `cd backend && source .venv/bin/activate && ctm serve` in one terminal and
 `cd frontend && npm run dev` in another.
@@ -188,8 +188,9 @@ backend/app/
   cli.py
 frontend/src/
   api/         typed client (types generated from OpenAPI)
-  components/  badges, layout, TimeChart (shared time axis + crosshair)
-  pages/       Watchlist, Detail, Feed, Alerts, Admin
+  components/  layout (sidebar), Signal (pills, sparklines), TimeChart (shared time axis + crosshair)
+  pages/       Dashboard, Ticker, Watchlist (Tickers), Alerts (Performance), Admin (Data & settings),
+               Detail (the "all the numbers" drill-down)
 config/settings.yaml
 DECISIONS.md
 ```

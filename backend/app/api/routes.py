@@ -12,6 +12,7 @@ from app.api.schemas import (
     AlertDetailOut,
     AlertLogOut,
     AttentionBadge,
+    DashboardOut,
     FeedOut,
     JobOut,
     PerformanceOut,
@@ -24,6 +25,7 @@ from app.api.schemas import (
     RunRequest,
     ScanInfo,
     SourceStatus,
+    TickerOut,
     StatusOut,
     WatchlistOut,
     WatchlistRow,
@@ -33,6 +35,7 @@ from app.core.config import ConfigError, Settings, load_settings
 from app.db.models import Company, Product, Scan, SignalState, SourceRun
 from app.db.session import session_factory
 from app.pipeline import jobs
+from app.pipeline.dashboard import dashboard, ticker_view
 from app.pipeline.detail import NotFound, product_detail
 from app.pipeline.evaluate import alert_detail, list_alerts, performance
 from app.pipeline.feed import FeedError, build_feed, record_review, review_history
@@ -162,6 +165,21 @@ def product(product_id: int, scan_id: int | None = None, days: int = Query(180, 
             session: Session = Depends(get_session)) -> ProductDetailOut:
     try:
         return ProductDetailOut.model_validate(product_detail(session, load_settings(), product_id, scan_id, days))
+    except NotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/dashboard", response_model=DashboardOut)
+def dashboard_view(session: Session = Depends(get_session)) -> DashboardOut:
+    """Today's read: one row per ticker, buy-side and sell-side signals, the radar, feed health."""
+    return DashboardOut.model_validate(dashboard(session, load_settings()))
+
+
+@router.get("/tickers/{ticker}", response_model=TickerOut)
+def ticker(ticker: str, product_id: int | None = None, days: int = Query(60, ge=30, le=400),
+           session: Session = Depends(get_session)) -> TickerOut:
+    try:
+        return TickerOut.model_validate(ticker_view(session, load_settings(), ticker, product_id, days))
     except NotFound as e:
         raise HTTPException(status_code=404, detail=str(e))
 

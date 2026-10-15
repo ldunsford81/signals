@@ -245,3 +245,37 @@ Simple, reasonable choices made while building, recorded so they can be revisite
 - **Jobs.** The Admin buttons call the same endpoints as the CLI (`/api/ingest`, `/api/scan`,
   `/api/daily`, `/api/replay`, `/api/evaluate`); they run synchronously and show a one-line summary
   plus the full JSON result. Source modes and scopes are read-only here (they live in config).
+
+## UI redesign (after step 11)
+
+- **Goal:** see in seconds which tickers have buy-side (entry) or sell-side (exit) signals, with
+  detail one click away instead of on screen. Mocked first on a design canvas, then built.
+- **Dark theme only.** Manrope for text, IBM Plex Mono for tickers and numbers. Chart and signal
+  colours are the dataviz reference dark steps, validated on the #111722 surface: buzz #3987e5, price
+  #d95926, entry #199e70, early mover #9085e9, exit #e66767. Every signal also carries an icon and a
+  label, so colour is never the only cue.
+- **Vocabulary.** Stage names are unchanged in the data and config; the UI says Entry signal, Early
+  mover, Exit signal, Watching, Data gap, Quiet (and Seasonal for a seasonal quiet product). Attention
+  is "product buzz", retail interest is "retail chatter", price response words are Flat / Moving /
+  Breaking out. "Buy-side" and "sell-side" headings group the signals; the app still never calls
+  anything a buy or sell order.
+- **Navigation.** Dashboard, Tickers (every product), Performance (was Alerts & evaluation), Data &
+  settings (was Admin). The Review feed is folded into the Dashboard (cards) and the Ticker page
+  (decision panel); old URLs redirect (`/feed`, `/alerts`, `/admin`, `/products/:id`).
+- **One row per ticker** on the Dashboard: the strongest product (stage priority, then attention
+  score) represents its company. Quiet tickers are hidden behind a toggle.
+- **Narrative in the API.** The headline sentence, verdicts, checks and short names come from
+  `pipeline/narrative.py` and `pipeline/dashboard.py` (`GET /api/dashboard`, `GET /api/tickers/{ticker}`),
+  so the frontend only lays them out. Checks list the conditions of the stage rule in plain words with
+  met / not met.
+- **Sparklines.** Card charts plot buzz (strongest healthy attention source, short-window mean) and the
+  stock relative to its benchmark, both indexed to 100 at the start of a 45-day window, on one axis. At
+  that scale price often looks flat next to buzz, which is the point of an entry signal; the ticker
+  page shows the two in separate panels with their own scales.
+- **Ticker chart.** Buzz with its normal range (baseline mean ± 2σ) above, the stock's relative return
+  since the price anchor below, sharing the time axis and crosshair, with the early-move threshold
+  drawn as a reference line. Timeline shows live signals and announcements only (replay stays on the
+  Performance page).
+- **Performance** shows one horizon at a time (5 / 20 / 60 days / through earnings) with a hit-rate bar,
+  instead of all sixteen columns at once; the signal log loads 25 rows at a time.
+- **Stage history** on the drill-down keeps the latest scan of each day.

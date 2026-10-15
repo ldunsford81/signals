@@ -3,6 +3,7 @@ import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 import { evalApi, type AlertLogRow, type AlertQuery, type PerformanceGroup } from "../api/client";
 import { Badge, Tag } from "../components/Badge";
+import { SignalPill, signalColor, STAGE_LABEL } from "../components/Signal";
 
 const STAGES = ["entry_review", "early_recognition", "exit_review"];
 const HORIZON_LABEL: Record<string, string> = { through_earnings: "Through earnings" };
@@ -11,9 +12,12 @@ const pct = (x?: number | null, digits = 1) =>
   x === null || x === undefined ? "—" : `${x >= 0 ? "+" : ""}${(x * 100).toFixed(digits)}%`;
 const rate = (x?: number | null) => (x === null || x === undefined ? "—" : `${Math.round(x * 100)}%`);
 const short = (h: string) => h.slice(0, 8);
+const WORDS: Record<string, string> = { ...STAGE_LABEL, early_move: "moving", clear_acceleration: "breaking out" };
+const word = (v?: string | null) => (v ? WORDS[v] ?? v : "new");
 
 function PerformanceTable() {
   const [combine, setCombine] = useState(false);
+  const [horizon, setHorizon] = useState("20d");
   const qc = useQueryClient();
   const { data, isFetching } = useQuery({
     queryKey: ["performance", combine],
@@ -25,110 +29,100 @@ function PerformanceTable() {
   const hs = data.horizons;
 
   return (
-    <section>
-      <div className="filters">
-        <h2 className="inline">Rules performance</h2>
+    <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="section-head">
+        <h2>
+          How each signal performed <span>· excess return vs benchmark after the signal</span>
+        </h2>
+        <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {hs.map((h) => (
+            <button key={h} className={`seg ${h === horizon ? "on" : ""}`} onClick={() => setHorizon(h)}>
+              {hLabel(h)}
+            </button>
+          ))}
+        </span>
+      </div>
+      {data.groups.length === 0 ? (
+        <div className="empty-card">
+          No signals scored yet. Run <code>ctm replay</code> then <code>ctm evaluate</code> (or the buttons in Data &amp; settings) to score
+          the rules on the seeded history.
+        </div>
+      ) : (
+        <div className="tboard" style={{ opacity: isFetching ? 0.6 : 1 }}>
+          <div style={{ minWidth: 820 }}>
+            <div className="prow head">
+              <span>Signal</span>
+              <span>Source</span>
+              <span className="r">Signals</span>
+              <span>Hit rate · {hLabel(horizon)}</span>
+              <span className="r">Median</span>
+              <span className="r">Mean</span>
+              <span>A hit means</span>
+            </div>
+            {data.groups.map((g) => (
+              <PerfRow key={`${g.stage}-${g.trigger}-${g.config_hash}`} g={g} h={horizon} current={data.current_config_hash} />
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="filters" style={{ margin: 0 }}>
         <label className="filter check">
           <input type="checkbox" checked={combine} onChange={(e) => setCombine(e.target.checked)} />
-          Combine replay and live alerts
+          Combine replay and live signals
         </label>
         <button className="seg" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
           {evaluate.isPending ? "Evaluating…" : "Re-run evaluate"}
         </button>
         <span className="muted small">
-          Excess return = stock − benchmark, close to close after the alert date. First alert per company per stage within{" "}
-          {data.dedupe_days} days counts once. Fewer than {data.min_sample_to_judge} completed alerts: too few to judge.
+          Close to close after the signal date. The first signal per company per stage within {data.dedupe_days} days counts once. Fewer
+          than {data.min_sample_to_judge} finished signals: too few to judge.
         </span>
       </div>
-      {data.groups.length === 0 ? (
-        <p className="muted">
-          No alerts yet. Run <code>ctm replay</code> then <code>ctm evaluate</code> to score the rules on the seeded history.
-        </p>
-      ) : (
-        <div className="table-wrap">
-        <table className="grid perf" style={{ opacity: isFetching ? 0.6 : 1 }}>
-          <thead>
-            <tr>
-              <th rowSpan={2}>Stage</th>
-              <th rowSpan={2}>Trigger</th>
-              <th rowSpan={2}>Config</th>
-              <th rowSpan={2} className="num">Alerts<br />(counted)</th>
-              <th rowSpan={2}>Hit means</th>
-              {hs.map((h) => (
-                <th key={h} colSpan={4} className="hgroup">
-                  {hLabel(h)}
-                </th>
-              ))}
-            </tr>
-            <tr>
-              {hs.map((h) => (
-                <Fragment key={h}>
-                  <th className="num hgroup-start">n</th>
-                  <th className="num">Hit rate</th>
-                  <th className="num">Median</th>
-                  <th className="num">Mean</th>
-                </Fragment>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.groups.map((g) => (
-              <PerfRow key={`${g.stage}-${g.trigger}-${g.config_hash}`} g={g} hs={hs} current={data.current_config_hash} />
-            ))}
-          </tbody>
-        </table>
-        </div>
-      )}
     </section>
   );
 }
 
-function PerfRow({ g, hs, current }: { g: PerformanceGroup; hs: string[]; current: string }) {
-  const hitText = g.hit_rule.startsWith("negative") ? "stock lags benchmark" : "stock beats benchmark";
+function PerfRow({ g, h, current }: { g: PerformanceGroup; h: string; current: string }) {
+  const s = g.horizons[h];
+  const negative = g.hit_rule.startsWith("negative");
+  const judged = s?.judged ?? false;
+  const rateVal = s?.hit_rate ?? null;
   return (
-    <tr>
-      <td>
-        <Badge kind="stage" value={g.stage} />
-      </td>
-      <td>{g.trigger === "all" ? "replay + live" : g.trigger}</td>
-      <td className="mono">
-        {short(g.config_hash)}
-        {g.config_hash === current && <Tag title="The config currently in settings.yaml">current</Tag>}
-      </td>
-      <td className="num">
-        {g.n_alerts} ({g.n_counted})
-      </td>
-      <td className="small">
-        {hitText}
-        {g.headline_horizon && <span className="muted"> · judged at {hLabel(g.headline_horizon)}</span>}
-      </td>
-      {hs.map((h) => {
-        const s = g.horizons[h];
-        const cls = `${s && !s.judged ? "too-few" : ""} ${g.headline_horizon === h ? "headline" : ""}`;
-        if (!s || s.n === 0)
-          return (
-            <Fragment key={h}>
-              <td className={`num hgroup-start ${cls}`}>0</td>
-              <td colSpan={3} className={`muted small ${cls}`}>
-                no completed outcomes
-              </td>
-            </Fragment>
-          );
-        return (
-          <Fragment key={h}>
-            <td className={`num hgroup-start ${cls}`} title={s.judged ? undefined : "too few to judge"}>
-              {s.n}
-            </td>
-            <td className={`num ${cls}`}>
-              <strong>{rate(s.hit_rate)}</strong>
-              {!s.judged && <div className="tf-label">too few to judge</div>}
-            </td>
-            <td className={`num ${cls}`}>{pct(s.median_excess)}</td>
-            <td className={`num ${cls}`}>{pct(s.mean_excess)}</td>
-          </Fragment>
-        );
-      })}
-    </tr>
+    <div className={`prow ${judged ? "" : "dim"}`}>
+      <span>
+        <SignalPill stage={g.stage} label={STAGE_LABEL[g.stage] ?? g.stage} size="sm" />
+      </span>
+      <span className="small">
+        {g.trigger === "all" ? "replay + live" : g.trigger === "replay" ? "history replay" : "live"}
+        <span className="muted mono" style={{ marginLeft: 8 }}>
+          {short(g.config_hash)}
+          {g.config_hash === current ? "" : " (old config)"}
+        </span>
+      </span>
+      <span className="r num-mono">
+        {s?.n ?? 0}
+        <span className="muted"> / {g.n_counted}</span>
+      </span>
+      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {rateVal === null ? (
+          <span className="muted small">not finished yet</span>
+        ) : (
+          <>
+            <span className="meter" style={{ flexBasis: 120 }}>
+              <span style={{ width: `${Math.round(rateVal * 100)}%`, background: signalColor(g.stage) }} />
+            </span>
+            <b className="num-mono">{rate(rateVal)}</b>
+            {!judged && <span className="tf-label">too few to judge</span>}
+          </>
+        )}
+      </span>
+      <span className="r num-mono">{pct(s?.median_excess)}</span>
+      <span className="r num-mono">{pct(s?.mean_excess)}</span>
+      <span className="small muted">
+        {negative ? "stock lags benchmark" : "stock beats benchmark"}
+        {g.headline_horizon && ` · judged at ${hLabel(g.headline_horizon)}`}
+      </span>
+    </div>
   );
 }
 
@@ -165,14 +159,14 @@ function AlertRowView({ a, hs, open, toggle }: { a: AlertLogRow; hs: string[]; o
       <td>{a.as_of}</td>
       <td className="mono">{a.ticker}</td>
       <td>
-        <Link to={`/products/${a.product_id}`}>{a.product}</Link>
+        <Link to={`/tickers/${a.ticker}?product=${a.product_id}`}>{a.product}</Link>
       </td>
       <td>
         <Badge kind="stage" value={a.stage} />
       </td>
       <td className="small changes-cell">
         {a.changed_fields
-          .map((c: any) => `${c.field === "price_response" ? "Price" : c.field === "retail_status" ? "Retail" : "Stage"}: ${c.from ?? "new"} → ${c.to}`)
+          .map((c: any) => `${c.field === "price_response" ? "Price" : c.field === "retail_status" ? "Chatter" : "Signal"}: ${word(c.from)} → ${word(c.to)}`)
           .join(" · ")}
       </td>
       <td>
@@ -201,20 +195,20 @@ function AlertRowView({ a, hs, open, toggle }: { a: AlertLogRow; hs: string[]; o
 }
 
 function AlertLog() {
-  const [q, setQ] = useState<AlertQuery>({ limit: 100 });
+  const [q, setQ] = useState<AlertQuery>({ limit: 25 });
   const [open, setOpen] = useState<number | null>(null);
   const { data, isFetching } = useQuery({
     queryKey: ["alerts", q],
     queryFn: () => evalApi.alerts(q),
     placeholderData: keepPreviousData,
   });
-  const set = (k: keyof AlertQuery) => (v: string) => setQ({ ...q, [k]: v || undefined, limit: 100 });
+  const set = (k: keyof AlertQuery) => (v: string) => setQ({ ...q, [k]: v || undefined, limit: 25 });
   const hs = data?.horizons ?? [];
   const cols = 10 + hs.length;
 
   return (
     <section>
-      <h2>Alert log</h2>
+      <h2>Signal log <span className="muted" style={{ fontWeight: 500, fontSize: 13 }}>· every signal ever written, with how it turned out</span></h2>
       <div className="filters">
         <label className="filter">
           Stage
@@ -287,7 +281,7 @@ function AlertLog() {
       )}
       {data && data.items.length < data.total && (
         <p>
-          <button className="seg" onClick={() => setQ({ ...q, limit: q.limit + 100 })}>
+          <button className="seg" onClick={() => setQ({ ...q, limit: q.limit + 50 })}>
             Show more
           </button>
         </p>
@@ -300,6 +294,12 @@ function AlertLog() {
 export function Alerts() {
   return (
     <section className="alerts-page">
+      <header className="page-head" style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span className="eyebrow">How past signals turned out</span>
+          <h1>Performance</h1>
+        </div>
+      </header>
       <PerformanceTable />
       <AlertLog />
     </section>

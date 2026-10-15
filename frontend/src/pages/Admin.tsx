@@ -101,7 +101,7 @@ function JobsPanel() {
 function SourcesPanel() {
   const { data } = useQuery({ queryKey: ["status"], queryFn: api.status });
   return (
-    <section className="admin-block">
+    <section className="admin-block" id="sources">
       <h2>Sources</h2>
       <div className="table-wrap">
         <table className="grid compact">
@@ -439,7 +439,7 @@ function ProductRow({ p, companies, open, toggle }: { p: ProductOut; companies: 
       <tr>
         <td className="mono">{p.ticker}</td>
         <td>
-          <Link to={`/products/${p.id}`}>{p.name}</Link>
+          <Link to={`/tickers/${p.ticker}?product=${p.id}`}>{p.name}</Link>
         </td>
         <td className="small">{p.keywords.join(", ")}</td>
         <td>{p.launched_on ?? "—"}</td>
@@ -675,9 +675,15 @@ export function Admin() {
   const flagged = (companies ?? []).filter((c) => c.earnings?.needs_date_update && c.active);
   return (
     <section className="admin">
+      <header className="page-head" style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span className="eyebrow">Jobs, feeds, catalog and imports</span>
+          <h1>Data &amp; settings</h1>
+        </div>
+      </header>
       {flagged.length > 0 && (
         <div className="banner warn flag-banner">
-          <strong>Earnings date needs an update:</strong>
+          <strong>Earnings date needs an update</strong>
           <ul>
             {flagged.map((c) => (
               <li key={c.id}>

@@ -167,9 +167,16 @@ def stage_history(session: Session, product_id: int) -> list[dict]:
         select(SignalState, Scan).join(Scan, Scan.id == SignalState.scan_id)
         .where(SignalState.product_id == product_id, Scan.status == "ok", Scan.trigger != "replay")
         .order_by(Scan.as_of.desc(), Scan.id.desc())).all()
-    return [{"scan_id": sc.id, "as_of": sc.as_of.isoformat(), "trigger": sc.trigger, "config_hash": sc.config_hash,
-             "stage": st.stage, "attention": st.attention_status, "price": st.price_response,
-             "retail": st.retail_status, "days_to_earnings": st.days_to_earnings} for st, sc in rows]
+    seen: set = set()
+    out = []
+    for st, sc in rows:  # newest first; keep the latest scan of each day
+        if sc.as_of in seen:
+            continue
+        seen.add(sc.as_of)
+        out.append({"scan_id": sc.id, "as_of": sc.as_of.isoformat(), "trigger": sc.trigger,
+                    "config_hash": sc.config_hash, "stage": st.stage, "attention": st.attention_status,
+                    "price": st.price_response, "retail": st.retail_status, "days_to_earnings": st.days_to_earnings})
+    return out
 
 
 def product_alerts(session: Session, product_id: int) -> list[dict]:

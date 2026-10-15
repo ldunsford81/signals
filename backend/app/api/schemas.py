@@ -405,3 +405,145 @@ class AlertDetailOut(BaseModel):
     created_at: datetime
     input_snapshot: dict[str, Any]
     outcomes: dict[str, Outcome]
+
+
+# ---- operator views: dashboard and ticker page ---------------------------------------
+class Segment(BaseModel):
+    text: str
+    strong: bool = False
+
+
+class TickerRow(BaseModel):
+    ticker: str
+    company: str
+    short_name: str
+    company_id: int
+    is_demo: bool
+    product_id: int
+    product: str
+    stage: str
+    label: str
+    side: str | None
+    attention: str
+    buzz_ratio: float | None
+    buzz_days: int | None
+    sources_ok: int
+    sources_total: int
+    strength: float | None
+    price: str
+    relative_return: float | None
+    volume_ratio: float | None
+    benchmark: str
+    retail: str
+    days_to_earnings: int | None
+    earnings_status: str
+    earnings_projected: bool
+    quarter_closed: bool
+    single_source: bool
+    new_today: bool
+    unknown_reasons: list[str]
+    buzz_spark: list[float | None] = []
+    price_spark: list[float | None] = []
+    products_in_signal: int = 0
+
+
+class RadarRow(TickerRow):
+    kind: str
+    note: str
+
+
+class KpiCount(BaseModel):
+    count: int
+    new: int
+    attention_needed: int | None = None
+
+
+class HealthIssue(BaseModel):
+    source: str
+    message: str
+
+
+class HealthSummary(BaseModel):
+    ok: bool
+    issues: list[HealthIssue]
+
+
+class DashScan(BaseModel):
+    id: int
+    as_of: date
+    finished_at: datetime | None
+    config_hash: str
+
+
+class DashboardOut(BaseModel):
+    scan: DashScan | None
+    headline: list[Segment]
+    kpis: dict[str, KpiCount]
+    buy: list[TickerRow]
+    sell: list[TickerRow]
+    radar: list[RadarRow]
+    board: list[TickerRow]
+    health: HealthSummary
+
+
+class ProductChoice(BaseModel):
+    id: int
+    name: str
+    stage: str
+    label: str
+    strength: float | None
+
+
+class Check(BaseModel):
+    label: str
+    ok: bool
+
+
+class SignalSummary(BaseModel):
+    stage: str
+    label: str
+    side: str | None
+    since: date | None
+    signal_start_date: date | None
+    verdict: str
+    checks: list[Check]
+
+
+class ChartPoint(BaseModel):
+    date: date
+    value: float | None
+    low: float | None = None
+    high: float | None = None
+
+
+class TickerChart(BaseModel):
+    buzz_source: str | None
+    buzz: list[ChartPoint]
+    price_rel: list[ChartPoint]
+    benchmark: str
+    early_move: float
+    clear_acceleration: float
+    window_start: date | None
+
+
+class Decision(BaseModel):
+    alert_id: int | None
+    alert_as_of: date | None
+    decision: str
+    note: str | None
+    reviewed_at: datetime | None
+
+
+class TickerOut(BaseModel):
+    company: CompanyInfo
+    products: list[ProductChoice]
+    product: ProductInfo
+    scan: DetailScan | None
+    announcements: list[AnnouncementOut]
+    history: list[HistoryRow]
+    signal: SignalSummary | None
+    tiles: dict[str, dict[str, Any]] | None = None
+    earnings: dict[str, Any] | None = None
+    decision: Decision | None = None
+    chart: TickerChart | None = None
+    detail: ProductDetailOut

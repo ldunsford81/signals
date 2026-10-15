@@ -22,6 +22,12 @@ export interface SeriesSpec {
   kind?: "line" | "bar";
 }
 
+export interface HLine {
+  y: number;
+  label: string;
+  color: string;
+}
+
 export interface Marker {
   t: number;
   label: string;
@@ -37,6 +43,7 @@ interface Props {
   series: SeriesSpec[];
   band?: { key: string; label: string };
   markers?: Marker[];
+  hlines?: HLine[];
   xDomain: [number, number];
   height?: number;
   syncId?: string;
@@ -78,6 +85,7 @@ export function TimeChart({
   series,
   band,
   markers = [],
+  hlines = [],
   xDomain,
   height = 180,
   syncId,
@@ -146,7 +154,7 @@ export function TimeChart({
                 dataKey={band.key}
                 stroke="none"
                 fill={C.band}
-                fillOpacity={0.12}
+                fillOpacity={0.16}
                 isAnimationActive={false}
                 activeDot={false}
                 connectNulls
@@ -168,6 +176,16 @@ export function TimeChart({
                 />
               ),
             )}
+            {hlines.map((h) => (
+              <ReferenceLine
+                key={`h-${h.y}`}
+                y={h.y}
+                stroke={h.color}
+                strokeWidth={1}
+                ifOverflow="extendDomain"
+                label={{ value: h.label, position: "insideBottomLeft", fill: h.color, fontSize: 11 }}
+              />
+            ))}
             {markers.map((m) => (
               <ReferenceLine
                 key={`${m.t}-${m.label}`}
@@ -176,7 +194,7 @@ export function TimeChart({
                 strokeWidth={m.strong ? 1.5 : 1}
                 ifOverflow="hidden"
                 // Signal start labels the top row; announcements sit on a second row so they never collide.
-                label={{ value: m.label, position: "insideTopLeft", fill: m.strong ? C.marker : C.text, fontSize: 11,
+                label={{ value: m.label, position: m.strong ? "insideTopRight" : "insideTopLeft", fill: m.strong ? C.marker : C.text, fontSize: 11,
                          dy: m.strong ? 0 : 13 }}
               />
             ))}
