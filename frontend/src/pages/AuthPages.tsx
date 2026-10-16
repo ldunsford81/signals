@@ -3,6 +3,7 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { authApi, type UserOut } from "../api/client";
 import { Brand } from "../components/Layout";
+import { StoryChart, StoryList } from "../components/SignalStory";
 
 /** Only same-site paths are honoured as a post-sign-in destination. */
 function safeNext(next: string | null): string {
@@ -11,16 +12,29 @@ function safeNext(next: string | null): string {
 
 function AuthCard({ title, sub, children }: { title: string; sub?: ReactNode; children: ReactNode }) {
   return (
-    <div className="auth-page">
-      <div className="auth-card">
+    <div className="landing">
+      <header className="landing-head">
         <Brand />
-        <div className="auth-title">
-          <h1>{title}</h1>
-          {sub && <p>{sub}</p>}
+        <h2>Product buzz, stock price and retail chatter, side by side.</h2>
+        <p>
+          SocialArb follows attention on consumer products, compares it with the company's stock and with retail chatter about
+          the ticker, and flags when they drift apart.
+        </p>
+      </header>
+      <section className="landing-story" aria-label="How the signals work">
+        <StoryChart />
+        <StoryList />
+        <p className="landing-foot">A review tool, not trading advice · socialarb.trade</p>
+      </section>
+      <main className="landing-form">
+        <div className="auth-card">
+          <div className="auth-title">
+            <h1>{title}</h1>
+            {sub && <p>{sub}</p>}
+          </div>
+          {children}
         </div>
-        {children}
-      </div>
-      <p className="auth-foot">Product buzz, price and retail chatter for consumer stocks. A review tool, not trading advice.</p>
+      </main>
     </div>
   );
 }
@@ -62,7 +76,7 @@ export function Login() {
   };
   const canSignUp = status.data && status.data.signup_mode !== "closed";
   return (
-    <AuthCard title="Sign in" sub="Welcome back.">
+    <AuthCard title="Sign in" sub="Welcome back. Sign in to see today's signals.">
       <form className="auth-form" onSubmit={submit}>
         <Input label="Email" type="email" autoComplete="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
         <Input label="Password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
